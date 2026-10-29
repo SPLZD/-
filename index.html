@@ -131,7 +131,7 @@ table.vt tr.on td{background:var(--accent-soft)}
 #zoom{pointer-events:auto;padding:0!important;background:var(--raise)}
 #zoom button{height:26px;padding:0 10px;font-family:var(--sans);font-size:12px}
 #zoom #zOut,#zoom #zIn{font-size:15px;width:30px;padding:0}
-#hintTxt{font-family:var(--sans);flex:1 1 320px;min-width:0}
+#hintTxt{font-family:var(--sans);flex:1 1 320px;min-width:0}#hintTxt.fine{color:var(--accent);font-weight:600;border-color:var(--accent)}
 @media (max-width:820px){#stage{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto}#stage>#wallBox{grid-column:1;grid-row:4;width:auto;max-height:40vh;border-left:0;border-top:1px solid var(--line)}#hintTxt{display:none}}
 #svg{display:block;width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none}
 #hint{position:absolute;left:10px;top:10px;right:10px;pointer-events:none;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
@@ -244,6 +244,8 @@ table.kt td{padding:3px 4px;border-top:1px solid var(--line);width:1%;white-spac
 #rdsvg{display:block;width:100%;height:100%;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}#rdsvg *{vector-effect:non-scaling-stroke}
 #rdTip{position:absolute;pointer-events:none;background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:14px;line-height:1.5;padding:6px 9px;border-radius:5px;white-space:nowrap;z-index:2}
 #rdHint{position:absolute;left:10px;bottom:10px;background:var(--raise);border:1px solid var(--line);border-radius:4px;padding:3px 8px;font-size:11px;color:var(--muted);pointer-events:none}
+#rdBays .rdbay{font-family:var(--mono);min-width:54px;justify-content:center}#rdBays .rdbay.on{background:var(--accent);border-color:var(--accent);color:var(--onaccent);font-weight:700}#rdBays .rdbay.diff::after{content:'•';color:var(--err);margin-left:2px}#rdBays .rdbay.on.diff::after{color:var(--onaccent)}
+.rdcur{fill:var(--accent);fill-opacity:.07;stroke:var(--accent);stroke-width:1.6px;stroke-dasharray:9 6;vector-effect:non-scaling-stroke}.rdcurl{fill:var(--accent)!important}.lvd line{stroke-dasharray:none}.lvd text{fill:var(--err)}
 #rdSide{overflow:auto;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;display:grid;gap:16px;align-content:start}#rdSide>*{min-width:0}
 .rdrow{display:grid;grid-template-columns:44px 1fr 1fr;gap:6px;align-items:end;margin-bottom:6px}.rdrow b{font-family:var(--mono);font-size:12px;padding-bottom:6px;color:var(--err)}.rdrow label{display:grid;gap:2px;font-size:11px;color:var(--muted)}
 .rdtop{font-size:11.5px;color:var(--muted);margin:4px 0 0}
@@ -389,12 +391,13 @@ body.placing #elsvg,body.placing #rdsvg{cursor:crosshair!important}
       <details open><summary>배치 규칙 · 자동 배치</summary>
         <div class="fields">
           <label class="span2">열 방향<select id="l_dir" data-b="lay.dir"><option value="x">가로 방향 열 (X축 따라)</option><option value="y">세로 방향 열 (Y축 따라)</option></select></label>
-          <label>랙 사이 간격<input id="l_gap" type="number" step="10" min="0" data-b="lay.gap"></label>
+          <label title="기둥 공유를 끈 경우 랙과 랙 사이 간격">랙 사이 간격<input id="l_gap" type="number" step="10" min="0" data-b="lay.gap"></label>
           <label>등맞댐 간격<input id="l_back" type="number" step="10" min="0" data-b="lay.back"></label>
           <label>통로 폭<input id="l_aisle" type="number" step="100" min="500" data-b="lay.aisle"></label>
           <label>벽 이격<input id="l_wall" type="number" step="50" min="0" data-b="lay.wall"></label>
           <label>H빔 이격<input id="l_col" type="number" step="50" min="0" data-b="lay.col"></label>
           <label>스냅 격자<select id="l_grid" data-b="grid"><option value="10">10</option><option value="50">50</option><option value="100">100</option><option value="250">250</option><option value="500">500</option></select></label>
+          <label class="chk span2"><input id="l_share" type="checkbox" data-b="lay.share">옆 랙과 가운데 기둥 공유 (자동 배치 · 끌어 붙이기)</label>
           <label class="chk span2"><input id="l_single" type="checkbox" data-b="lay.single">벽면 첫 열은 단열(한 줄)로 시작</label>
         </div>
         <div class="row"><button class="btn primary" id="bAuto">자동 배치 실행</button></div>
@@ -485,6 +488,7 @@ body.placing #elsvg,body.placing #rdsvg{cursor:crosshair!important}
           <label title="기둥(프레임) 가로 폭">기둥 가로<input id="q_uw" type="number" step="5" min="20" max="400"></label>
           <label title="가로빔 두께">빔 두께<input id="q_bt" type="number" step="5" min="20" max="400"></label>
           <button class="btn sm" id="qbAll">전체 랙에 적용</button>
+          <span id="shBtns" class="row" style="margin:0" hidden><button class="btn sm" id="shJoin" title="옆 랙에 붙여 가운데 기둥을 하나로 (J)">옆 랙과 기둥 공유</button><button class="btn sm" id="shSplit" title="공유한 기둥을 둘로 나눠 띄우기 (Shift+J)">기둥 공유 풀기</button></span>
           <div id="gapRow" hidden>
             <span class="glab" id="gLab">선택 랙 간격 mm</span>
             <label><i class="gn" id="gn_L"></i>← <span id="gt_L"></span><input id="g_L" type="number" step="10" min="0" aria-label="왼쪽 간격"></label>
@@ -592,16 +596,17 @@ body.placing #elsvg,body.placing #rdsvg{cursor:crosshair!important}
     <div class="row"><button class="btn" id="cfmSaveFirst">먼저 저장하기</button><button class="btn danger" id="cfmEmpty">빈 창고로 초기화</button><button class="btn" id="cfmSample">예시 데이터로 초기화</button><button class="btn" id="cfmCancel">취소</button></div>
   </div>
 </div>
-<div id="ctx" hidden role="menu"><div id="ctxInfo" hidden></div><button data-c="txt" role="menuitem">여기에 텍스트 넣기</button><button data-c="rd" role="menuitem">도면 보기 (랙 상세 치수)</button><button data-c="sel" role="menuitem">2D 도면에서 이 랙 선택</button></div>
+<div id="ctx" hidden role="menu"><div id="ctxInfo" hidden></div><button data-c="txt" role="menuitem">여기에 텍스트 넣기</button><button data-c="rd" role="menuitem">도면 보기 (랙 상세 치수)</button><button data-c="sel" role="menuitem">2D 도면에서 이 랙 선택</button><button data-c="shj" role="menuitem">옆 랙과 기둥 공유</button><button data-c="shs" role="menuitem">기둥 공유 풀기</button></div>
 <div id="rd" hidden>
   <div id="rdBar"><b id="rdTitle">랙 상세도</b><span class="kv" id="rdSub"></span>
     <span class="acts"><button class="btn goodsBtn" aria-pressed="false" title="적재물 숨기기/보이기 (G)">적재물 숨기기</button><button class="btn" id="rdTxt" title="텍스트 넣기 (T)">텍스트 넣기</button><button class="btn" id="rdZo" aria-label="축소">−</button><button class="btn" id="rdZi" aria-label="확대">+</button><button class="btn" id="rdFit">맞춤</button><button class="btn primary" id="rdPdf">PDF 저장</button><button class="btn" id="rdClose">닫기</button></span></div>
   <div id="rdBody">
-    <div id="rdCv"><svg id="rdsvg" xmlns="http://www.w3.org/2000/svg"></svg><div id="rdTip" hidden></div><div id="rdHint">가로빔(빨강)은 위아래, 기둥(파랑)은 좌우로 끌어 조정 · 확대하면 10mm, 아니면 50mm 단위</div></div>
+    <div id="rdCv"><svg id="rdsvg" xmlns="http://www.w3.org/2000/svg"></svg><div id="rdTip" hidden></div><div id="rdHint">칸을 눌러 선택 · 가로빔(빨강)은 위아래, 기둥(파랑)은 좌우로 끌어 조정 (확대하면 10mm, 아니면 50mm) · 끄는 중이나 빔 위에서 Shift+휠 = 10mm 미세 조정</div></div>
     <aside id="rdSide">
-      <section><p class="pvh">적용 범위</p><select id="rd_scope" aria-label="적용 범위"><option value="same">같은 규격 랙 모두</option><option value="chain">기둥을 공유하는 랙 전체</option><option value="one">이 랙만</option></select><p class="note" id="rdScopeN"></p></section>
+      <section><p class="pvh">편집할 칸</p><div class="chips" id="rdBays"></div><p class="note" style="margin:6px 0 0">정면도에서 칸을 누르거나 그 칸의 빔을 끌면 바로 그 칸이 선택됩니다. 점(•)은 단 높이를 따로 바꾼 칸입니다.</p></section>
+      <section><p class="pvh">적용 범위</p><select id="rd_scope" aria-label="적용 범위"><option value="one" selected>이 칸만 (각각 따로)</option><option value="chain">기둥 공유 묶음 전체</option><option value="run">같은 열 전체</option><option value="same">같은 규격 랙 모두</option></select><p class="note" id="rdScopeN"></p></section>
       <section><p class="pvh">기둥 · 가로빔</p><div class="fields"><label>기둥 가로 mm<input id="rd_uw" type="number" step="5" min="20" max="400"></label><label>가로빔 두께 mm<input id="rd_bt" type="number" step="5" min="20" max="400"></label><label>랙 높이 mm<input id="rd_H" type="number" step="50" min="500"></label><label>단수<input id="rd_L" type="number" step="1" min="1" max="12"></label></div></section>
-      <section><p class="pvh">가로빔 위치 (빔 상단 기준, mm)</p><div id="rdBeams"></div></section>
+      <section><p class="pvh" id="rdBeamsT">가로빔 위치 (빔 상단 기준, mm)</p><div id="rdBeams"></div><div class="chips" style="margin-top:8px"><button class="btn sm" id="rdCpRun" title="이 칸의 단 높이를 같은 열의 다른 칸에 그대로 복사">이 칸 단 높이 → 같은 열 전체</button><button class="btn sm" id="rdCpSame" title="이 칸의 단 높이를 같은 규격 랙 전부에 복사">→ 같은 규격 전체</button><button class="btn sm" id="rdLvReset" title="적용 범위의 칸을 기본 단 간격으로">기본 간격으로</button></div></section>
       <section><p class="pvh">기둥 위치 · 칸 가로 (mm)</p><div id="rdUps"></div><p class="note">도면에서 파란 기둥을 좌우로 끌어도 됩니다. 기둥을 공유하는 이 묶음에만 적용됩니다.</p></section>
       <section><p class="pvh">치수 요약</p><table class="kvt" id="rdSum"></table></section>
     </aside>
@@ -660,7 +665,7 @@ function defaults(){return{
   poly:[[0,0],[30000,0],[30000,20000],[0,20000]],
   ceil:7000, wallT:200,
   spec:{W:2600,D:1000,H:3000,L:2,P:2,floor:false,uw:100,bt:100},
-  lay:{dir:'x',gap:100,back:200,aisle:3000,wall:500,col:300,single:true,wallFit:0},
+  lay:{dir:'x',gap:100,back:200,aisle:3000,wall:500,col:300,single:true,wallFit:0,share:true},
   beamSize:300, beamW:300, beamH:300, bgrid:{x:10000,y:10000}, grid:100,
   racks:[],beams:[],doors:[],decks:[],texts:[],sheets:[{id:'s1',name:'1층',kind:'floor',racks:[],texts:[]}],cur:0,deckZ:3000,deckT:100,elev:{a:0,all:true,dims:true},txt:{size:5,font:'sans',bold:false,color:'ink'},spawn:null,doorW:1000,doorH:2000,doorKind:'swing',doorOut:false,
   show:{sheet:true,dims:true,grid:true,pallets:true,labels:true,aisles:true,axes:true,inst:true,instEdit:false,goods:true}
@@ -719,7 +724,7 @@ function autoLayout(st){
     for(const rv of rows){
       if(rv+D>V1-o.wall+0.5)continue;
       let u=U0+o.wall;
-      while(u+W<=U1-o.wall+0.5){const f=ax?{x:u,y:rv,w:W,h:D}:{x:rv,y:u,w:D,h:W};if(fits(f)){out.push({id:uid(),x:f.x,y:f.y,rot:ax?0:1,W,D,H,L,P});u+=o.gap<=10?W-(+st.spec.uw||100):W+o.gap}else u+=50}
+      while(u+W<=U1-o.wall+0.5){const f=ax?{x:u,y:rv,w:W,h:D}:{x:rv,y:u,w:D,h:W};if(fits(f)){out.push({id:uid(),x:f.x,y:f.y,rot:ax?0:1,W,D,H,L,P});u+=(o.share!==false||o.gap<=10)?W-(+st.spec.uw||100):W+o.gap}else u+=50}
     }}
   st.racks=out;return out.length;
 }
@@ -856,6 +861,38 @@ function mergeNorm(){if(!S||!S.racks)return;const G=new Map();for(const r of S.r
   for(const L of G.values()){if(L.length<2)continue;const rot=L[0].rot?1:0,U=r=>rot?r.y:r.x;L.sort((a,b)=>U(a)-U(b));
     for(let i=1;i<L.length;i++){const a=L[i-1],b=L[i],uw=Math.max(rUW(a),rUW(b)),gap=U(b)-(U(a)+a.W);if(gap<=10&&gap>=-Math.max(uw,400)-1&&Math.abs(gap+uw)>0.5){const nv=U(a)+a.W-uw;if(rot)b.y=nv;else b.x=nv}}}}
 
+const UofR=q=>q.rot?q.y:q.x,setU=(q,v)=>{if(q.rot)q.y=Math.round(v);else q.x=Math.round(v)};
+function rowKey(r){const f=fp(r),rot=r.rot?1:0;return rot+'|'+Math.round(rot?f.x:f.y)+'|'+Math.round(rot?f.w:f.h)}
+function rowMates(r){const k=rowKey(r);return S.racks.filter(q=>rowKey(q)===k).sort((a,b)=>UofR(a)-UofR(b))}
+function placeOk(ids){for(const id of ids){const r=rackById(id);if(!r)continue;const f=fp(r),rot=r.rot?1:0;if(!rectIn(f,S.poly))return'벽 밖으로 나갑니다';
+  for(const q of S.racks){if(q===r)continue;if(ov(f,fp(q),-1)&&!((q.rot?1:0)===rot&&shareOv(f,fp(q),rot,Math.max(rUW(q),rUW(r)))))return'다른 랙과 겹칩니다'}
+  for(const b of S.beams)if(ov(f,beamRect(b),-1))return'H빔과 겹칩니다';for(const d of S.doors||[]){}}return''}
+function snapPos(){return S.racks.map(r=>[r,r.x,r.y])}
+function restorePos(P){P.forEach(([r,x,y])=>{r.x=x;r.y=y})}
+const JOINMAX=3000;
+function shareJoin(ids){const sel=[...ids].map(rackById).filter(Boolean);if(!sel.length)return;const P0=snapPos(),moved=new Set();let n=0,skipN=0;
+  const G=new Map();sel.forEach(r=>{const k=rowKey(r);if(!G.has(k))G.set(k,[]);G.get(k).push(r)});
+  for(const L of G.values()){L.sort((a,b)=>UofR(a)-UofR(b));const M=rowMates(L[0]);
+    if(L.length===1){const r=L[0],i=M.indexOf(r),p=M[i-1],q=M[i+1],uw=x=>Math.max(rUW(r),rUW(x));
+      const gl=p?UofR(r)-(UofR(p)+p.W):Infinity,gr=q?UofR(q)-(UofR(r)+r.W):Infinity,okL=p&&!shared(p,r)&&gl>-uw(p)&&gl<=JOINMAX,okR=q&&!shared(r,q)&&gr>-uw(q)&&gr<=JOINMAX;
+      const tries=[];if(okL)tries.push(['L',gl]);if(okR)tries.push(['R',gr]);tries.sort((a,b)=>a[1]-b[1]);
+      let done=false;for(const [side] of tries){const v0=UofR(r);if(side==='L')setU(r,UofR(p)+p.W-uw(p));else setU(r,UofR(q)-r.W+uw(q));if(!placeOk([r.id])){done=true;n++;moved.add(r.id);
+          const o=side==='L'?q:p,okO=side==='L'?okR:okL;if(o&&okO){const ch=chainOf(o),P1=snapPos(),d=side==='L'?(UofR(r)+r.W-uw(o))-UofR(o):(UofR(r)+uw(o))-(UofR(o)+o.W);ch.forEach(x=>setU(x,UofR(x)+d));if(!placeOk(ch.map(x=>x.id))){n++;ch.forEach(x=>moved.add(x.id))}else restorePos(P1)}
+          break}setU(r,v0)}
+      if(!done&&tries.length){restorePos(P0);toast('붙이면 다른 랙·벽·H빔과 겹쳐서 기둥을 공유할 수 없습니다.');return}continue}
+    for(let k=1;k<L.length;k++){const a=L[k-1],b=L[k];if(shared(a,b))continue;const between=M.slice(M.indexOf(a)+1,M.indexOf(b));if(between.length)continue;const gap=UofR(b)-(UofR(a)+a.W);if(gap>1000){skipN++;continue}
+      const d=(UofR(a)+a.W-Math.max(rUW(a),rUW(b)))-UofR(b),P1=snapPos(),tail=L.slice(k);tail.forEach(x=>setU(x,UofR(x)+d));if(placeOk(tail.map(x=>x.id))){restorePos(P1);skipN++;continue}tail.forEach(x=>moved.add(x.id));n++}}
+  if(!n){toast('같은 줄에서 3m 안에 붙일 수 있는 옆 랙이 없습니다. (이미 공유 중이거나 줄·깊이가 다름)');return}
+  const err=placeOk(moved);if(err){restorePos(P0);toast(`기둥을 공유하도록 붙이면 ${err}.`);return}
+  commit();render();renderSel();toast(`${n}곳을 붙여 가운데 기둥을 공유했습니다 · 기둥 ${n}개 절약${skipN?` · ${skipN}곳은 1m 넘게 떨어졌거나 H빔·벽에 걸려 그대로 둠`:''}`)}
+function shareSplit(ids){const sel=new Set(ids);if(!sel.size)return;const P0=snapPos(),pairs=[],seen=new Set();
+  for(const id of sel){const r=rackById(id);if(!r)continue;const M=rowMates(r),i=M.indexOf(r);for(const [a,b] of [[M[i-1],r],[r,M[i+1]]]){if(!a||!b||!shared(a,b))continue;const k=a.id+'|'+b.id;if(seen.has(k))continue;seen.add(k);pairs.push([a,b])}}
+  if(!pairs.length){toast('선택한 랙은 옆 랙과 기둥을 공유하고 있지 않습니다.');return}
+  const g=(+S.lay.gap>10?+S.lay.gap:100);pairs.sort((x,y)=>UofR(y[1])-UofR(x[1]));const moved=new Set();
+  for(const [a,b] of pairs){const M=rowMates(a),d=g+Math.max(rUW(a),rUW(b))+(UofR(a)+a.W-Math.max(rUW(a),rUW(b))-UofR(b));
+    const right=M.filter(q=>UofR(q)>=UofR(b)-0.5),left=M.filter(q=>UofR(q)<=UofR(a)+0.5);
+    right.forEach(q=>setU(q,UofR(q)+d));if(placeOk(right.map(q=>q.id))){right.forEach(q=>setU(q,UofR(q)-d));left.forEach(q=>setU(q,UofR(q)-d));if(placeOk(left.map(q=>q.id))){restorePos(P0);toast('공유를 풀 공간(양쪽 모두)이 부족합니다. 옆 랙을 먼저 옮기세요.');return}left.forEach(q=>moved.add(q.id))}else right.forEach(q=>moved.add(q.id))}
+  commit();render();renderSel();toast(`${pairs.length}곳의 기둥 공유를 풀고 ${fmt(g)}mm 띄웠습니다.`)}
 function drawingSVG({L,AN,LB,interactive,noTexts}){
   const ts=L.ts,bb=L.bb,P=S.poly,sh=S.show;
   const pts=P.map(v=>R1(v[0])+','+R1(v[1])).join(' ');
@@ -1085,8 +1122,19 @@ function zoomAt(cx,cy,f){autoFit=false;const w=toW(cx,cy),r=svgRect();V.s=clamp(
 
 /* ---------------- 스냅 · 판정 ---------------- */
 const snapG=v=>{const g=+S.grid||100;return Math.round(v/g)*g};
+const MODK={alt:false};
+addEventListener('keydown',e=>{if(e.key==='Alt'){MODK.alt=true;if(drag||pend)e.preventDefault()}},true);addEventListener('keyup',e=>{if(e.key==='Alt'){MODK.alt=false;if(drag)e.preventDefault()}},true);addEventListener('blur',()=>{MODK.alt=false});
+function shareSnap(f,ex,th){if(S.lay.share===false||MODK.alt)return null;const rot=f.h>f.w?1:0,cap=Math.max(th,Math.min(300,60/V.s));let best=null;
+  for(const r of S.racks){if(ex&&ex.has(r.id))continue;if((r.rot?1:0)!==rot)continue;const q=fp(r),uw=Math.max(rUW(r),+S.spec.uw||100);
+    if(!rot){if(Math.abs(f.h-q.h)>1||Math.abs(f.y-q.y)>cap)continue;for(const c of [q.x+q.w-uw,q.x-f.w+uw]){const d=Math.abs(c-f.x)+Math.abs(f.y-q.y)*0.5;if(Math.abs(c-f.x)<=cap&&(!best||d<best.d))best={d,x:c,y:q.y,uw}}}
+    else{if(Math.abs(f.w-q.w)>1||Math.abs(f.x-q.x)>cap)continue;for(const c of [q.y+q.h-uw,q.y-f.h+uw]){const d=Math.abs(c-f.y)+Math.abs(f.x-q.x)*0.5;if(Math.abs(c-f.y)<=cap&&(!best||d<best.d))best={d,x:q.x,y:c,uw}}}}
+  if(!best)return null;const g={...f,x:best.x,y:best.y};
+  for(const r of S.racks){if(ex&&ex.has(r.id))continue;const q=fp(r);if(ov(g,q,-1)&&!((r.rot?1:0)===rot&&shareOv(g,q,rot,Math.max(rUW(r),best.uw))))return null}
+  return[best.x,best.y]}
 function snapRect(f,ex,raw,st){
-  const th=raw?Math.min(14/V.s,(st||100)*0.49):14/V.s;let X=null,Y=null,bx=th,by=th;const o=S.lay,gaps=[0,o.gap,o.back,o.aisle];const R=Math.max(o.aisle,3000)+3000;
+  if(MODK.alt)return[raw?f.x:snapG(f.x),raw?f.y:snapG(f.y)];
+  {const th0=raw?Math.min(14/V.s,(st||100)*0.49):14/V.s,sh=shareSnap(f,ex,th0);if(sh)return sh}
+  const th=raw?Math.min(14/V.s,(st||100)*0.49):14/V.s;let X=null,Y=null,bx=th,by=th;const o=S.lay,gaps=o.share!==false?[0,o.back,o.aisle]:[0,o.gap,o.back,o.aisle];const R=Math.max(o.aisle,3000)+3000;
   const tx=c=>{const d=Math.abs(c-f.x);if(d<bx){bx=d;X=c}},ty=c=>{const d=Math.abs(c-f.y);if(d<by){by=d;Y=c}};
   for(const r of S.racks){if(ex&&ex.has(r.id))continue;const q=fp(r);
     if(!(f.x<q.x+q.w+R&&q.x<f.x+f.w+R&&f.y<q.y+q.h+R&&q.y<f.y+f.h+R))continue;
@@ -1135,24 +1183,26 @@ svg.addEventListener('pointerdown',e=>{
   if(tool==='rack'&&kt==='pend'&&pend){drag={type:'mpend',w0:w,o:{x:pend.x,y:pend.y},moved:false};return}
   drag=pan;
 });
-svg.addEventListener('pointermove',e=>{
+function onPlanMove(e){
+  if(e.altKey!==undefined)MODK.alt=!!e.altKey;if(drag&&e.pointerId!==-1)drag.lastC=[e.clientX,e.clientY];
   if(ptrs.has(e.pointerId))ptrs.set(e.pointerId,[e.clientX,e.clientY]);
   const w=toW(e.clientX,e.clientY);$('#stC').textContent=`X ${fmt(w[0])}  Y ${fmt(w[1])}`;
   if(drag&&drag.type==='pinch'){if(ptrs.size<2)return;const[a,b]=[...ptrs.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]),r=svgRect();V.s=clamp(drag.s0*d/drag.d0,0.0008,4);V.x=drag.m[0]-((a[0]+b[0])/2-r.left)/V.s;V.y=drag.m[1]-((a[1]+b[1])/2-r.top)/V.s;applyView();renderOv();return}
   if(!drag){hover(w);return}
   if(!drag.c0)drag.c0=lastDownC||[e.clientX,e.clientY];
   if(drag.type==='pan'){const dx=e.clientX-drag.sx,dy=e.clientY-drag.sy;if(drag.click&&Math.hypot(dx,dy)>5&&!lockV)drag.click=false;if(!drag.click){V.x=drag.vx-dx/V.s;V.y=drag.vy-dy/V.s;autoFit=false;applyView()}else hover(w);return}
-  if(drag.type==='move'){const dx=(e.clientX-drag.c0[0])/V.s,dy=(e.clientY-drag.c0[1])/V.s;if(!drag.moved&&Math.hypot(dx,dy)*V.s<4)return;drag.moved=true;
-    const g=rackById(drag.grab),o=drag.orig.get(drag.grab);if(!g)return;const st=dragStep(),f=fp({...g,x:o.x+Math.round(dx/st)*st,y:o.y+Math.round(dy/st)*st});const[sx,sy]=snapRect(f,Sel.r,true,st);const ddx=sx-o.x,ddy=sy-o.y;drag.info={st,dx:ddx,dy:ddy,id:drag.grab};
+  if(drag.type==='move'){const dx=(e.clientX-drag.c0[0])/V.s,dy=(e.clientY-drag.c0[1])/V.s;if(!drag.moved&&!drag.fine&&Math.hypot(dx,dy)*V.s<4)return;drag.moved=true;
+    const g=rackById(drag.grab),o=drag.orig.get(drag.grab);if(!g)return;const st=dragStep(),f=fp({...g,x:o.x+Math.round(dx/st)*st,y:o.y+Math.round(dy/st)*st});const[sx,sy]=snapRect(f,Sel.r,true,st);const ddx=sx-o.x+(drag.fine?drag.fine[0]:0),ddy=sy-o.y+(drag.fine?drag.fine[1]:0);drag.info={st,dx:ddx,dy:ddy,id:drag.grab};
     S.racks.forEach(r=>{const q=drag.orig.get(r.id);if(q){r.x=q.x+ddx;r.y=q.y+ddy}});render();return}
-  if(drag.type==='mpend'){const dx=(e.clientX-drag.c0[0])/V.s,dy=(e.clientY-drag.c0[1])/V.s;if(!drag.moved&&Math.hypot(dx,dy)*V.s<4)return;drag.moved=true;const st=dragStep(),f=fp({...pend,x:drag.o.x+Math.round(dx/st)*st,y:drag.o.y+Math.round(dy/st)*st});[pend.x,pend.y]=snapRect(f,null,true,st);drag.info={st,dx:pend.x-drag.o.x,dy:pend.y-drag.o.y,id:'pend'};renderOv();renderGapRow();renderWf();return}
+  if(drag.type==='mpend'){const dx=(e.clientX-drag.c0[0])/V.s,dy=(e.clientY-drag.c0[1])/V.s;if(!drag.moved&&!drag.fine&&Math.hypot(dx,dy)*V.s<4)return;drag.moved=true;const st=dragStep(),f=fp({...pend,x:drag.o.x+Math.round(dx/st)*st,y:drag.o.y+Math.round(dy/st)*st});[pend.x,pend.y]=snapRect(f,null,true,st);pend.x+=(drag.fine?drag.fine[0]:0);pend.y+=(drag.fine?drag.fine[1]:0);drag.info={st,dx:pend.x-drag.o.x,dy:pend.y-drag.o.y,id:'pend'};renderOv();renderGapRow();renderWf();return}
   if(drag.type==='ndeck'){drag.b=[snapG(w[0]),snapG(w[1])];ghost={t:'ndeck',r:normRect(drag.a,drag.b)};renderOv();return}
-  if(drag.type==='mdeck'||drag.type==='mtext'){const dx=(e.clientX-drag.c0[0])/V.s,dy=(e.clientY-drag.c0[1])/V.s;if(!drag.moved&&Math.hypot(dx,dy)*V.s<4)return;drag.moved=true;const o=drag.type==='mdeck'?deckById(Sel.k):textById(Sel.t);if(o){const st=dragStep();o.x=drag.o.x+Math.round(dx/st)*st;o.y=drag.o.y+Math.round(dy/st)*st;drag.info={st,dx:o.x-drag.o.x,dy:o.y-drag.o.y,kind:'text'};render();renderSel()}return}
+  if(drag.type==='mdeck'||drag.type==='mtext'){const dx=(e.clientX-drag.c0[0])/V.s,dy=(e.clientY-drag.c0[1])/V.s;if(!drag.moved&&!drag.fine&&Math.hypot(dx,dy)*V.s<4)return;drag.moved=true;const o=drag.type==='mdeck'?deckById(Sel.k):textById(Sel.t);if(o){const st=dragStep();o.x=drag.o.x+Math.round(dx/st)*st+(drag.fine?drag.fine[0]:0);o.y=drag.o.y+Math.round(dy/st)*st+(drag.fine?drag.fine[1]:0);drag.info={st,dx:o.x-drag.o.x,dy:o.y-drag.o.y,kind:'text'};render();renderSel()}return}
   if(drag.type==='mdoor'){if(!drag.moved&&Math.hypot(w[0]-drag.w0[0],w[1]-drag.w0[1])*V.s<4)return;drag.moved=true;const d=doorById(Sel.d);if(d){d.x=w[0];d.y=w[1];doorFix(d,true);render();renderSel()}return}
-  if(drag.type==='mbeam'){const dx=(e.clientX-drag.c0[0])/V.s,dy=(e.clientY-drag.c0[1])/V.s;if(!drag.moved&&Math.hypot(dx,dy)*V.s<4)return;drag.moved=true;const b=beamById(Sel.b);if(b){const st=dragStep();b.x=drag.o.x+Math.round(dx/st)*st;b.y=drag.o.y+Math.round(dy/st)*st;drag.info={st,dx:b.x-drag.o.x,dy:b.y-drag.o.y,kind:'beam'};render();renderSel()}return}
+  if(drag.type==='mbeam'){const dx=(e.clientX-drag.c0[0])/V.s,dy=(e.clientY-drag.c0[1])/V.s;if(!drag.moved&&!drag.fine&&Math.hypot(dx,dy)*V.s<4)return;drag.moved=true;const b=beamById(Sel.b);if(b){const st=dragStep();b.x=drag.o.x+Math.round(dx/st)*st+(drag.fine?drag.fine[0]:0);b.y=drag.o.y+Math.round(dy/st)*st+(drag.fine?drag.fine[1]:0);drag.info={st,dx:b.x-drag.o.x,dy:b.y-drag.o.y,kind:'beam'};render();renderSel()}return}
   if(drag.type==='vtx'){S.poly[drag.i]=[snapG(w[0]),snapG(w[1])];drag.moved=true;render();renderVerts();return}
   if(drag.type==='box'){marquee.b=w;renderOv()}
-});
+}
+svg.addEventListener('pointermove',onPlanMove);
 function endPtr(e){
   ptrs.delete(e.pointerId);$('#cv').classList.remove('panning');if(!drag)return;
   if(drag.type==='pinch'){if(ptrs.size===0)drag=null;return}
@@ -1166,7 +1216,25 @@ function endPtr(e){
 }
 svg.addEventListener('pointerup',e=>{endPtr(e);renderOv()});svg.addEventListener('pointercancel',endPtr);
 svg.addEventListener('pointerleave',()=>{if(!drag&&ghost){ghost=null;renderOv()}});
-svg.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.clientX,e.clientY,Math.exp(-e.deltaY*0.0015))},{passive:false});
+/* Shift+휠: 10mm 미세 이동 (랙은 길이 방향, Ctrl+Shift는 깊이 방향) */
+function wheelSteps(e,acc){let d=e.deltaY||e.deltaX;if(e.deltaMode===1)d*=33;else if(e.deltaMode===2)d*=400;if(!d)return 0;
+  if(Math.abs(d)>=50){acc.v=0;return d<0?1:-1}acc.v+=d;if(Math.abs(acc.v)>=60){const k=acc.v<0?1:-1;acc.v=0;return k}return 0}
+const WACC={v:0};let fineT=0;
+function fineAxis(e,isRack,rot){const cross=e.ctrlKey||e.metaKey;if(isRack){const along=rot?'y':'x';return cross?(along==='x'?'y':'x'):along}return cross?'y':'x'}
+function fineMsg(ax,tot){const t=$('#hintTxt');if(!t.classList.contains('fine'))t.dataset.prev=t.textContent;t.textContent=`미세 이동 ${ax==='x'?'가로(X)':'세로(Y)'} ${tot>0?'+':''}${fmt(tot)} mm · 10mm 단위 · Shift+휠 / Ctrl+Shift+휠`;t.classList.add('fine');clearTimeout(fineT);fineT=setTimeout(()=>{t.classList.remove('fine');if(t.dataset.prev!=null)t.textContent=t.dataset.prev},2600)}
+let wCommitT=0;
+svg.addEventListener('wheel',e=>{e.preventDefault();
+  if(e.shiftKey){const k=wheelSteps(e,WACC);if(!k)return;
+    if(drag&&['move','mpend','mbeam','mtext','mdeck'].includes(drag.type)){let isR=false,rot=0;if(drag.type==='move'){const g=rackById(drag.grab);isR=!!g;rot=g&&g.rot?1:0}else if(drag.type==='mpend'&&pend){isR=true;rot=pend.rot?1:0}
+      const ax=fineAxis(e,isR,rot),v=ax==='x'?10*k:-10*k;drag.fine=drag.fine||[0,0];drag.fine[ax==='x'?0:1]+=v;drag.moved=true;const c=drag.lastC||lastDownC||[e.clientX,e.clientY];onPlanMove({clientX:c[0],clientY:c[1],pointerId:-1});renderOv();fineMsg(ax,drag.fine[ax==='x'?0:1]);return}
+    if(!drag){let isR=false,rot=0;if(pend&&tool==='rack'){isR=true;rot=pend.rot?1:0}else if(Sel.r.size){isR=true;const r0=rackById([...Sel.r][0]);rot=r0&&r0.rot?1:0}else if(!(Sel.b||Sel.t||Sel.k))return;
+      const ax=fineAxis(e,isR,rot),v=ax==='x'?10*k:-10*k,dx=ax==='x'?v:0,dy=ax==='x'?0:v;
+      if(pend&&tool==='rack'){pend.x+=dx;pend.y+=dy;renderOv();renderSel();fineMsg(ax,v);return}
+      if(Sel.r.size)S.racks.forEach(r=>{if(Sel.r.has(r.id)){r.x+=dx;r.y+=dy}});else if(Sel.b){const b=beamById(Sel.b);b.x+=dx;b.y+=dy}else if(Sel.t){const t=textById(Sel.t);t.x+=dx;t.y+=dy}else if(Sel.k){const kk=deckById(Sel.k);kk.x+=dx;kk.y+=dy}
+      render();renderSel();renderOv();WFT.tot=(WFT.ax===ax&&Date.now()-WFT.t<2500?WFT.tot:0)+v;WFT.ax=ax;WFT.t=Date.now();fineMsg(ax,WFT.tot);clearTimeout(wCommitT);wCommitT=setTimeout(()=>{commit();render();renderSel()},450);return}
+    return}
+  zoomAt(e.clientX,e.clientY,Math.exp(-e.deltaY*0.0015))},{passive:false});
+const WFT={ax:'',t:0,tot:0};
 let rDown=null,lastDownC=null;svg.addEventListener('pointerdown',e=>{lastDownC=[e.clientX,e.clientY];if(e.button===2)rDown=[e.clientX,e.clientY]},true);
 svg.addEventListener('contextmenu',e=>{e.preventDefault();if(rDown&&Math.hypot(e.clientX-rDown[0],e.clientY-rDown[1])>5)return;const el=document.elementFromPoint(e.clientX,e.clientY),g=el&&el.closest&&el.closest('[data-k^="rack:"]'),w=toW(e.clientX,e.clientY);showCtx(e.clientX,e.clientY,g?g.dataset.k.slice(5):null,{view:'plan',x:w[0],y:w[1]})});
 svg.addEventListener('dblclick',e=>{const tg=e.target.closest&&e.target.closest('[data-k^="text:"]');if(tg){Sel.t=tg.dataset.k.slice(5);if(tool!=='text')setTool('select');renderSel();render();openTBox('plan',Sel.t);return}if(!(e.target.closest&&e.target.closest('[data-k]'))&&['select','text'].includes(tool)){const w=toW(e.clientX,e.clientY);newText('plan',w[0],w[1]);return}if(tool==='rack'&&pend&&e.target.closest&&e.target.closest('[data-k="pend"]'))confirmPend()});
@@ -1200,7 +1268,7 @@ function rotSel(){
 }
 function dup(){
   if(!Sel.r.size)return;const sel=S.racks.filter(r=>Sel.r.has(r.id)),bb=bbox(sel.flatMap(r=>corners(fp(r))));
-  const vert=sel.length===1&&sel[0].rot;const dx=vert?0:bb.w+S.lay.gap,dy=vert?bb.h+S.lay.gap:0;
+  const vert=sel.length===1&&sel[0].rot,sh=S.lay.share!==false?-Math.max(...sel.map(rUW)):S.lay.gap;const dx=vert?0:bb.w+sh,dy=vert?bb.h+sh:0;
   const nw=sel.map(r=>({...r,id:uid(),x:r.x+dx,y:r.y+dy}));S.racks.push(...nw);Sel.r=new Set(nw.map(r=>r.id));commit();render();renderSel();
   const bad=nw.filter(r=>AN.get(r.id)?.lvl==='err').length;if(bad)toast(`복제한 랙 ${bad}개가 벽이나 다른 랙과 겹칩니다. 끌어서 옮겨 주세요.`);
 }
@@ -1219,7 +1287,7 @@ function nudge(dx,dy){
   commit();render();renderSel();
 }
 function setTool(t){tool=t;ghost=null;if(t!=='select'&&t!=='door')Sel.d=null;if(t!=='select'&&t!=='deck')Sel.k=null;if(t!=='select'&&t!=='text')Sel.t=null;if(t!=='rack')pend=null;if(t!=='measure')meas=null;$$('#tools button').forEach(b=>b.classList.toggle('on',b.dataset.tool===t));
-  const H={select:'랙을 끌어 옮기면 옆 랙·벽에 자동으로 붙습니다 · Shift+클릭 여러 개 · 빈 곳을 끌면 범위 선택 · R 회전 · Del 삭제',rack:'누르면 임시 랙이 생깁니다 · 끌거나 다른 곳을 눌러 위치 조정 · 위쪽에서 앞뒤·양옆 간격 확인/입력 · Enter·더블클릭 설치 · Esc 취소 · R 회전',beam:'누르는 곳에 H빔 기둥을 놓습니다 · 놓기 전에 X·Y 방향으로 벽·랙·기둥까지 거리가 보입니다',door:'벽 가까이를 누르면 출입구가 생깁니다 · 위쪽 줄에서 가로·높이·모서리에서 거리를 입력하세요',deck:'끌어서 데크(복층) 영역을 그립니다 · 위쪽 줄에서 위치·크기·상면 높이·두께를 입력하세요',text:'누른 곳에 텍스트 상자가 뜹니다 · 바로 입력하고 Enter · 어느 도구에서든 빈 곳 더블클릭이나 우클릭 → 텍스트 넣기도 됩니다',wall:'벽 변을 누르면 실측 길이 입력칸으로 이동 · 꼭짓점 끌기 · 변 가운데 + 로 꼭짓점 추가',measure:'두 점을 차례로 눌러 거리를 잽니다',spawn:'3D 워크스루를 시작할 위치를 누르세요'};
+  const H={select:'옆 랙에 대면 기둥 공유로 붙음 · Alt+끌기 자석 끔 · Shift+휠 10mm 이동 · J 기둥 공유 · Shift+J 풀기',rack:'누르면 임시 랙이 생깁니다 · 끌거나 다른 곳을 눌러 위치 조정 · 위쪽에서 앞뒤·양옆 간격 확인/입력 · Enter·더블클릭 설치 · Esc 취소 · R 회전',beam:'누르는 곳에 H빔 기둥을 놓습니다 · 놓기 전에 X·Y 방향으로 벽·랙·기둥까지 거리가 보입니다',door:'벽 가까이를 누르면 출입구가 생깁니다 · 위쪽 줄에서 가로·높이·모서리에서 거리를 입력하세요',deck:'끌어서 데크(복층) 영역을 그립니다 · 위쪽 줄에서 위치·크기·상면 높이·두께를 입력하세요',text:'누른 곳에 텍스트 상자가 뜹니다 · 바로 입력하고 Enter · 어느 도구에서든 빈 곳 더블클릭이나 우클릭 → 텍스트 넣기도 됩니다',wall:'벽 변을 누르면 실측 길이 입력칸으로 이동 · 꼭짓점 끌기 · 변 가운데 + 로 꼭짓점 추가',measure:'두 점을 차례로 눌러 거리를 잽니다',spawn:'3D 워크스루를 시작할 위치를 누르세요'};
   $('#hintTxt').textContent=H[t];$('#qbar').hidden=!(t==='select'||t==='rack'||t==='beam'||t==='door'||t==='deck'||t==='text');$('#wallBox').hidden=t!=='wall';if(t==='wall')renderWall();if(t==='wall'){$('#dSel').open=true}renderOv();renderSel();
 }
 
@@ -1325,8 +1393,10 @@ function renderQbar(){
   renderGapRow();renderWf();
   const sel=S.racks.filter(r=>Sel.r.has(r.id));const src=(tool==='rack'&&pend)||sel[0]||S.spec;
   $('#qbLab').textContent=(tool==='rack'&&pend)?'임시 랙 규격':sel.length?`선택 랙 ${sel.length}개`:'새 랙 규격';
+  {const sb=$('#shBtns');sb.hidden=!(sel.length&&tool==='select');if(!sb.hidden){const anyS=sel.some(r=>S.racks.some(q=>q!==r&&shared(r,q)));$('#shSplit').disabled=!anyS}}
   QK.forEach(k=>{const el=$('#q_'+k);if(document.activeElement!==el)el.value=k==='uw'?rUW(src):k==='bt'?rBT(src):src[k]});
 }
+$('#shJoin').onclick=()=>shareJoin(Sel.r);$('#shSplit').onclick=()=>shareSplit(Sel.r);
 QK.forEach(k=>$('#q_'+k).addEventListener('change',e=>{
   const v=Math.round(+e.target.value);if(!(v>0)){renderQbar();return}
   if((k==='uw'||k==='bt')&&!(v>=20&&v<=400)){toast('기둥 가로·빔 두께는 20~400mm로 입력하세요.');renderQbar();return}
@@ -1701,11 +1771,11 @@ const dragStep=()=>10*V.s>=2.5?10:100;
 let CTXID=null;
 let CTXW=null,RINFO=null;
 function rackInfoHTML(r){const uw=rUW(r),lab=labels().lab.get(r.id)||'',c=chainOf(r);return `<div><b>${esc(lab)}</b> · ${r.rot?'세로':'가로'} 방향${c.length>1?` · 기둥 공유 ${c.length}칸 묶음`:''}</div><div><span class="k">외경</span><b>${fmt(r.W)}</b> mm <span class="kv">(기둥 포함 바깥 가로)</span></div><div><span class="k">내경</span><b>${fmt(r.W-2*uw)}</b> mm <span class="kv">(기둥 사이 안쪽, 기둥 ${fmt(uw)})</span></div><div><span class="k">폭</span><b>${fmt(r.D)}</b> mm <span class="kv">(깊이)</span> · 높이 ${fmt(r.H)} · ${r.L}단</div>`}
-function showCtx(x,y,id,w){CTXID=id;CTXW=w||null;const m=$('#ctx');const ci=$('#ctxInfo'),rr=id&&rackById(id);ci.hidden=!rr;if(rr)ci.innerHTML=rackInfoHTML(rr);RINFO=rr&&w&&w.view==='plan'?id:null;if(RINFO)renderOv();m.querySelector('[data-c=rd]').hidden=!id;m.querySelector('[data-c=sel]').hidden=!id||(w&&w.view==='rd');m.querySelector('[data-c=txt]').hidden=!w;m.hidden=false;const r=m.getBoundingClientRect();m.style.left=Math.min(x,innerWidth-r.width-8)+'px';m.style.top=Math.min(y,innerHeight-r.height-8)+'px';m.querySelector('button').focus()}
+function showCtx(x,y,id,w){CTXID=id;CTXW=w||null;const m=$('#ctx');const ci=$('#ctxInfo'),rr=id&&rackById(id);ci.hidden=!rr;if(rr)ci.innerHTML=rackInfoHTML(rr);RINFO=rr&&w&&w.view==='plan'?id:null;if(RINFO)renderOv();m.querySelector('[data-c=rd]').hidden=!id;m.querySelector('[data-c=sel]').hidden=!id||(w&&w.view==='rd');m.querySelector('[data-c=txt]').hidden=!w;{const pl=!!id&&!(w&&w.view==='rd'),rr2=id&&rackById(id),sh=rr2&&S.racks.some(q=>q!==rr2&&shared(rr2,q));m.querySelector('[data-c=shj]').hidden=!pl;m.querySelector('[data-c=shs]').hidden=!pl||!sh}m.hidden=false;const r=m.getBoundingClientRect();m.style.left=Math.min(x,innerWidth-r.width-8)+'px';m.style.top=Math.min(y,innerHeight-r.height-8)+'px';m.querySelector('button').focus()}
 function hideCtx(){$('#ctx').hidden=true}
 function clearRInfo(){if(RINFO){RINFO=null;renderOv()}}
 addEventListener('pointerdown',e=>{if(!$('#ctx').hidden&&!e.target.closest('#ctx'))hideCtx();if(RINFO&&!e.target.closest('#ctx')&&e.button!==2)clearRInfo()},true);
-$('#ctx').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;hideCtx();if(b.dataset.c==='txt'){if(CTXW)newText(CTXW.view,CTXW.x,CTXW.y);return}if(b.dataset.c==='rd')openRD(CTXID);else{if(viewEl)setView('2d');setTool('select');Sel.r=new Set([CTXID]);Sel.b=null;Sel.d=null;Sel.t=null;renderSel();render()}});
+$('#ctx').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;hideCtx();if(b.dataset.c==='txt'){if(CTXW)newText(CTXW.view,CTXW.x,CTXW.y);return}if(b.dataset.c==='shj'||b.dataset.c==='shs'){const ids=Sel.r.has(CTXID)?new Set(Sel.r):new Set([CTXID]);(b.dataset.c==='shj'?shareJoin:shareSplit)(ids);if(!$('#rd').hidden)renderRD();return}if(b.dataset.c==='rd')openRD(CTXID);else{if(viewEl)setView('2d');setTool('select');Sel.r=new Set([CTXID]);Sel.b=null;Sel.d=null;Sel.t=null;renderSel();render()}});
 
 /* ---------------- 랙 상세도 ---------------- */
 function sigOf(r){return [r.W,r.D,r.H,r.L,rUW(r),rBT(r),beamTops(r).join(',')].join('|')}
@@ -1715,7 +1785,7 @@ function rowRun(r){const rot=r.rot?1:0,f=fp(r),v=rot?f.x:f.y,dep=rot?f.w:f.h,U=q
   const runs=[];for(const q of row){const L=runs[runs.length-1];if(L){const p=L[L.length-1];if(U(q)-(U(p)+p.W)<=600){L.push(q);continue}}runs.push([q])}return runs.find(x=>x.includes(r))||[r]}
 function allChains(){const seen=new Set(),out=[];const U=q=>q.rot?q.y:q.x;for(const r of [...S.racks].sort((a,b)=>(a.rot-b.rot)||(U(a)-U(b)))){if(seen.has(r.id))continue;const c=chainOf(r);c.forEach(q=>seen.add(q.id));out.push(c)}return out}
 const RD={id:null,sig:'',drag:null,udrag:null,u0:0,x:0,y:0,s:1,free:false,box:null};const rdsvg=$('#rdsvg');
-function rdScope(){const r=rackById(RD.id);if(!r)return[];const m=$('#rd_scope').value;if(m==='one')return[r];if(m==='chain')return chainOf(r);return S.racks.filter(q=>sigOf(q)===RD.sig)}
+function rdScope(){const r=rackById(RD.id);if(!r)return[];const m=$('#rd_scope').value;if(m==='one')return[r];if(m==='chain')return chainOf(r);if(m==='run')return rowRun(r);return S.racks.filter(q=>sigOf(q)===RD.sig)}
 function rdBuild(r0,mode,interactive){
   const run=mode==='chain'?chainOf(r0):rowRun(r0),rot=r0.rot?1:0,U=q=>rot?q.y:q.x,u0=(interactive&&RD.udrag&&RD.fixU0!=null)?RD.fixU0:U(run[0]),last=run[run.length-1],len=U(last)+last.W-u0;
   const chains=[];for(const q of run){const c=chains[chains.length-1];if(c&&shared(c[c.length-1],q))c.push(q);else chains.push([q])}
@@ -1730,7 +1800,8 @@ function rdBuild(r0,mode,interactive){
   for(const q of run){const a=U(q)-u0,W=+q.W,H=+q.H,uw=Math.min(rUW(q),W*0.3),bt=rBT(q),tops=beamTops(q),sel=scope.has(q.id);
     // 평면
     s+=ln(a+uw,PY,a+W-uw,PY,'rdpl')+ln(a+uw,PY+Dp,a+W-uw,PY+Dp,'rdpl')+rc(a,PY,uw,Dp,'rdup')+rc(a+W-uw,PY,uw,Dp,'rdup');
-    s+=txt(a+W/2,PY-ts*0.8,lab.get(q.id)||'',ts*0.8,'rdlab','middle');
+    s+=txt(a+W/2,PY-ts*0.8,lab.get(q.id)||'',ts*0.8,'rdlab'+(interactive&&q.id===RD.id?' rdcurl':''),'middle');
+    if(interactive&&q.id===RD.id)s+=rc(a-ts*0.15,Y(H)-ts*0.25,W+ts*0.3,H+ts*0.25,'rdcur')+rc(a-ts*0.15,PY-ts*0.15,W+ts*0.3,Dp+ts*0.3,'rdcur');
     // 정면
     s+=`<g class="${sel?'rdsel':''}">`+rc(a,Y(H),uw,H,'rdup')+rc(a+W-uw,Y(H),uw,H,'rdup');
     tops.forEach((t,i)=>{s+=rc(a+uw,Y(t),W-2*uw,bt,'rdbm')+rc(a+uw-Math.min(uw*0.5,25),Y(t),Math.min(uw*0.5,25),bt,'rdbc')+rc(a+W-uw,Y(t),Math.min(uw*0.5,25),bt,'rdbc');
@@ -1748,9 +1819,10 @@ function rdBuild(r0,mode,interactive){
     const isUp=(A,B)=>c.some(q=>{const a=U(q)-u0,uw=Math.min(rUW(q),q.W*0.3);return(Math.abs(A-a)<1&&Math.abs(B-a-uw)<1)||(Math.abs(A-(a+q.W-uw))<1&&Math.abs(B-a-q.W)<1)});
     const lf=(A,B)=>isUp(A,B)?'':fmt(B-A);
     for(const y0 of [0,PY+Dp]){s+=dimRow(pts,y0,ts*1.9,lf)+dimSVG(dimG(a0,y0,a1,y0,0,1,ts*3.9,ts*0.2,ts),fmt(a1-a0),ts*1.05,'dim tot')}
-    const ref=c.includes(r0)?r0:c[0],H=+ref.H,tops=beamTops(ref),xl=i===order[0]?0:a0;
+    const ref=(()=>{const key=q=>beamTops(q).join()+'|'+q.H,cnt=new Map();c.forEach(q=>cnt.set(key(q),(cnt.get(key(q))||0)+1));let bk=null,bn=-1;for(const [k,v] of cnt)if(v>bn||(v===bn&&c.includes(r0)&&k===key(r0))){bk=k;bn=v}return c.includes(r0)&&key(r0)===bk?r0:c.find(q=>key(q)===bk)})(),H=+ref.H,tops=beamTops(ref),xl=i===order[0]?0:a0;
     const hp=[0,...tops,H];for(let k=0;k+1<hp.length;k++){const A=hp[k],B=hp[k+1];if(B-A<0.5)continue;s+=dimSVG(dimG(xl,Y(B),xl,Y(A),-1,0,ts*1.9,ts*0.2,ts),fmt(B-A),ts*0.95)}
     s+=dimSVG(dimG(xl,Y(H),xl,Y(0),-1,0,ts*3.9,ts*0.2,ts),fmt(H),ts*1.05,'dim tot');
+    c.forEach(q=>{if(q===ref)return;const tq=beamTops(q);if(tq.join()===tops.join()&&+q.H===H)return;const uwq=Math.min(rUW(q),q.W*0.3),xr=U(q)-u0+q.W-uwq,hq=[0,...tq,+q.H];for(let k=0;k+1<hq.length;k++){const A=hq[k],B=hq[k+1];if(B-A<0.5)continue;s+=dimSVG(dimG(xr,Y(B),xr,Y(A),-1,0,ts*1.3,ts*0.2,ts),fmt(B-A),ts*0.85,'dim lvd')}});
     s+=dimSVG(dimG(xl,PY+Dp,xl,PY,-1,0,ts*1.9,ts*0.2,ts),fmt(Dp),ts*0.95);
   });
   {const skip=chains.filter((_,i)=>!doDim.has(i)).reduce((n,c)=>n+c.length,0);if(skip){const ref=chains[order[0]],nm=ref.map(q=>lab.get(q.id)||'').filter(Boolean),t=`동일 규격 독립형 랙 ${skip}대는 수치를 생략했습니다 · 수치 표기: ${nm[0]}${nm.length>1?' ~ '+nm[nm.length-1]:''}`;s+=txt(len/2,ts*5.6,t,ts*0.8,'rdnote','middle')+txt(len/2,PY+Dp+ts*5.4,t,ts*0.8,'rdnote','middle')}}
@@ -1775,7 +1847,10 @@ function renderRD(refit){const r=rackById(RD.id);if(!r){closeRD();return}const E
   const lab=labels().lab;$('#rdTitle').textContent=`랙 상세도 · ${lab.get(r.id)||''}`;$('#rdSub').textContent=`가로 ${fmt(r.W)} × 깊이 ${fmt(r.D)} × 높이 ${fmt(r.H)} · ${r.L}단 · 같은 열 ${E.run.length}칸 · 기둥 공유 묶음 ${E.chains.length}개`;
   if(!RD.drag&&!RD.udrag)renderRDSide()}
 function renderRDSide(){const r=rackById(RD.id);if(!r)return;const set=(id,v)=>{const el=$('#'+id);if(document.activeElement!==el)el.value=v};
-  set('rd_uw',rUW(r));set('rd_bt',rBT(r));set('rd_H',r.H);set('rd_L',r.L);const sc=rdScope();$('#rdScopeN').textContent=`${sc.length}대에 적용됩니다.`;
+  set('rd_uw',rUW(r));set('rd_bt',rBT(r));set('rd_H',r.H);set('rd_L',r.L);const sc=rdScope(),labm=labels().lab,nm=labm.get(r.id)||'이 칸',scm=$('#rd_scope').value;
+  $('#rdScopeN').textContent=scm==='one'?`${nm} 한 칸에만 적용됩니다. 옆 칸은 그대로입니다.`:`${sc.length}대에 함께 적용됩니다.`;
+  {const run=rowRun(r);$('#rdBays').innerHTML=run.map(q=>{const df=Array.isArray(q.lv)&&q.lv.length===(q.L|0)&&q.lv.join()!==defTops(q).join();return `<button class="btn sm rdbay${q.id===r.id?' on':''}${df?' diff':''}" data-bay="${q.id}" title="${esc(labm.get(q.id)||'')} · 단 ${beamTops(q).map(fmt).join(' / ')}">${esc(labm.get(q.id)||'?')}</button>`}).join('')}
+  $('#rdBeamsT').textContent=`가로빔 위치 · ${nm} (빔 상단 기준, mm)`;
   const tops=beamTops(r);let h='';for(let i=tops.length-1;i>=0;i--)h+=`<div class="rdrow"><b>${i+1}단</b><label>바닥에서<input id="rbf${i}" data-rf="${i}" type="number" step="10" value="${tops[i]}"></label><label>${i?'아래 빔과':'바닥과'}<input id="rbg${i}" data-rg="${i}" type="number" step="10" value="${tops[i]-(i?tops[i-1]:0)}"></label></div>`;
   $('#rdBeams').innerHTML=h+`<p class="rdtop">최상단 빔 상단 → 기둥 끝: <b>${fmt(r.H-tops[tops.length-1])}</b> mm · 빔 두께 ${fmt(rBT(r))}</p>`;
   {const c=chainOf(r),u0=r.rot?c[0].y:c[0].x,X=chainXs(c,u0);let h='';for(let j=1;j<X.xs.length;j++)h+=`<div class="rdrow"><b style="color:var(--steel)">기둥${j+1}</b><label>왼쪽 끝에서<input id="rup${j}" data-up="${j}" type="number" step="10" value="${Math.round(X.xs[j])}"></label><label>왼쪽 칸 안쪽<input id="rus${j}" data-us="${j}" type="number" step="10" value="${Math.round(X.xs[j]-X.xs[j-1]-X.uw[j-1])}"></label></div>`;
@@ -1791,6 +1866,14 @@ $('#rdUps').addEventListener('change',e=>{const t=e.target,r=rackById(RD.id);if(
   if(!chainOk(xs,X.uw)){toast('칸 안쪽 가로는 200mm 이상이어야 하고, 기둥 순서를 바꿀 수 없습니다.');renderRDSide();return}
   setChainXs(c,xs,u0);RD.sig=sigOf(r);commit();render();renderRD()});
 $('#rd_scope').addEventListener('change',()=>{RD.sig=sigOf(rackById(RD.id));renderRD()});
+function rdPick(id){const q=rackById(id);if(!q||id===RD.id)return;RD.id=id;RD.sig=sigOf(q);renderRD()}
+$('#rdBays').addEventListener('click',e=>{const b=e.target.closest('[data-bay]');if(b)rdPick(b.dataset.bay)});
+function rdCopyLv(list,what){const r=rackById(RD.id);if(!r)return;const tops=beamTops(r).slice();let n=0,skip=0;
+  for(const q of list){if(q===r)continue;if((q.L|0)!==tops.length||+q.H<tops[tops.length-1]||!validTops(tops,+q.H,rBT(q))){skip++;continue}q.lv=tops.slice();n++}
+  RD.sig=sigOf(r);commit();render();renderRD();toast(n?`${what} ${n}칸에 단 높이(${tops.map(fmt).join(' / ')})를 복사했습니다.${skip?` 단수·높이가 달라 ${skip}칸은 건너뜀`:''}`:'복사할 칸이 없습니다. (단수나 높이가 다름)')}
+$('#rdCpRun').onclick=()=>{const r=rackById(RD.id);if(r)rdCopyLv(rowRun(r),'같은 열')};
+$('#rdCpSame').onclick=()=>{const r=rackById(RD.id);if(!r)return;const k=q=>[q.W,q.D,q.H,q.L,rUW(q),rBT(q)].join('|');rdCopyLv(S.racks.filter(q=>k(q)===k(r)),'같은 규격')};
+$('#rdLvReset').onclick=()=>{const sc=rdScope();sc.forEach(q=>{delete q.lv});RD.sig=sigOf(rackById(RD.id));commit();render();renderRD();toast(`${sc.length}칸을 기본 단 간격으로 되돌렸습니다.`)};
 $('#rd_uw').addEventListener('change',e=>{const v=+e.target.value;if(!(v>=20&&v<=400)){renderRDSide();return}rdSet(q=>{q.uw=v})});
 $('#rd_bt').addEventListener('change',e=>{const v=+e.target.value;if(!(v>=20&&v<=400)){renderRDSide();return}rdSet(q=>{q.bt=v})});
 $('#rd_H').addEventListener('change',e=>{const v=+e.target.value;if(!(v>=500)){renderRDSide();return}const r=rackById(RD.id);if(beamTops(r).some(t=>t>v)){toast('가로빔보다 낮게 할 수 없습니다. 빔 위치를 먼저 내리세요.');renderRDSide();return}rdSet(q=>{q.H=v})});
@@ -1801,29 +1884,40 @@ $('#rdBeams').addEventListener('change',e=>{const t=e.target,r=rackById(RD.id);i
   rdSet(q=>{if((q.L|0)===tops.length&&+q.H>=tops[tops.length-1])q.lv=tops.slice()})});
 $('#rdClose').onclick=closeRD;$('#rdFit').onclick=()=>rdFit();
 $('#rdZi').onclick=()=>{const r=rdsvg.getBoundingClientRect();rdZoom(r.left+r.width/2,r.top+r.height/2,1.3)};$('#rdZo').onclick=()=>{const r=rdsvg.getBoundingClientRect();rdZoom(r.left+r.width/2,r.top+r.height/2,1/1.3)};
-rdsvg.addEventListener('wheel',e=>{e.preventDefault();rdZoom(e.clientX,e.clientY,Math.exp(-e.deltaY*0.0015))},{passive:false});
+const RWACC={v:0};let rdWT=0;
+rdsvg.addEventListener('wheel',e=>{e.preventDefault();
+  if(e.shiftKey){const k=wheelSteps(e,RWACC);if(!k)return;
+    if(RD.drag||RD.udrag){const D=RD.drag||RD.udrag;D.fine=(D.fine||0)+10*k;D.moved=true;if(RD.lastE&&RD.move)RD.move(RD.lastE);return}
+    const hb=e.target.closest&&e.target.closest('[data-bi]');if(!hb)return;const[rid,si]=hb.dataset.bi.split(':'),i=+si,q=rackById(rid);if(!q)return;if(rid!==RD.id){RD.id=rid;RD.sig=sigOf(q)}
+    const tops=beamTops(q).slice(),bt=rBT(q),lo=(i?tops[i-1]:0)+bt+20,hi=i+1<tops.length?tops[i+1]-bt-20:+q.H,t=tops[i]+10*k;if(t<lo||t>hi){toast(i+1<tops.length||k<0?'더 움직이면 옆 빔과 너무 가깝습니다 (빔 두께+20mm).':'기둥 끝을 넘을 수 없습니다.');return}tops[i]=t;
+    const ids=new Set(rdScope().map(x=>x.id));ids.add(rid);for(const id of ids){const x=rackById(id);if(x&&(x.L|0)===tops.length&&+x.H>=tops[tops.length-1]){const tt=beamTops(x).slice();tt[i]=t;if(validTops(tt,+x.H,rBT(x)))x.lv=tt}}
+    renderRD();const rr=rdsvg.getBoundingClientRect(),tip=$('#rdTip');tip.innerHTML=`${labels().lab.get(q.id)||''} ${i+1}단 빔 상단 · 10mm 미세 조정<br>바닥에서 <b>${fmt(t)}</b><br>${i?'아래 빔 상단과':'바닥과'} <b>${fmt(t-(i?tops[i-1]:0))}</b><br>${i+1<tops.length?'위 빔 상단과':'기둥 끝까지'} <b>${fmt((i+1<tops.length?tops[i+1]:+q.H)-t)}</b>`;
+    tip.hidden=false;tip.style.left=Math.min(e.clientX-rr.left+16,rr.width-190)+'px';tip.style.top=Math.max(e.clientY-rr.top-70,6)+'px';
+    clearTimeout(rdWT);rdWT=setTimeout(()=>{tip.hidden=true;RD.sig=sigOf(rackById(RD.id));commit();render();renderRD()},700);return}
+  rdZoom(e.clientX,e.clientY,Math.exp(-e.deltaY*0.0015))},{passive:false});
 rdsvg.addEventListener('dblclick',e=>{const tx=e.target.closest('[data-tx]');if(tx){openTBox('rd',tx.dataset.tx);return}if(!e.target.closest('[data-bi],[data-ui]')){const w=vWorld('rd',e.clientX,e.clientY);newText('rd',w[0],w[1])}});
 rdsvg.addEventListener('contextmenu',e=>{e.preventDefault();const w=vWorld('rd',e.clientX,e.clientY);showCtx(e.clientX,e.clientY,null,{view:'rd',x:w[0],y:w[1]})});
 {let pd=null;
 rdsvg.addEventListener('pointerdown',e=>{try{rdsvg.setPointerCapture(e.pointerId)}catch(_){}const hb=e.target.closest&&e.target.closest('[data-bi]');
   const hu=e.target.closest&&e.target.closest('[data-ui]');if(hu&&e.button===0){const[cid,j]=hu.dataset.ui.split(':');RD.udrag={cid,j:+j,moved:false};RD.fixU0=RD.u0;pd=null;return}
-  if(hb&&e.button===0){const[rid,i]=hb.dataset.bi.split(':');const q=rackById(rid);RD.drag={rid,i:+i,ids:rdScope().map(x=>x.id),moved:false,t0:beamTops(q)[+i]};if(!RD.drag.ids.includes(rid))RD.drag.ids.push(rid);pd=null;return}
+  if(hb&&e.button===0){const[rid,i]=hb.dataset.bi.split(':');const q=rackById(rid);if(rid!==RD.id){RD.id=rid;RD.sig=sigOf(q)}RD.drag={rid,i:+i,ids:rdScope().map(x=>x.id),moved:false,t0:beamTops(q)[+i]};if(!RD.drag.ids.includes(rid))RD.drag.ids.push(rid);pd=null;return}
   pd={x:e.clientX,y:e.clientY,vx:RD.x,vy:RD.y}});
-rdsvg.addEventListener('pointermove',e=>{
+const rdMove=e=>{
   if(RD.udrag){const D=RD.udrag,c0=chainOf(rackById(D.cid)),u0=RD.u0,cu0=c0[0].rot?c0[0].y:c0[0].x,X=chainXs(c0,cu0),xs=X.xs.slice(),rr=rdsvg.getBoundingClientRect(),st=10*RD.s>=2?10:50;
-    const wx=RD.x+(e.clientX-rr.left)/RD.s-(cu0-u0),j=D.j,uw=X.uw;let v=Math.round(wx/st)*st;
+    const wx=RD.x+(e.clientX-rr.left)/RD.s-(cu0-u0),j=D.j,uw=X.uw;let v=Math.round(wx/st)*st+(D.fine||0);
     const lo=j>0?xs[j-1]+uw[j-1]+200:-Infinity,hi=j<xs.length-1?xs[j+1]-uw[j]-200:Infinity;if(lo>hi)return;v=clamp(v,lo,hi);if(j===0)v=Math.min(v,hi);xs[j]=v;D.moved=true;
     setChainXs(c0,xs,cu0);renderRD();const tot=xs[xs.length-1]+uw[uw.length-1]-xs[0],tip=$('#rdTip');
-    tip.innerHTML=`기둥${j+1} · ${st}mm 단위<br>왼쪽 끝에서 <b>${fmt(xs[j]-xs[0])}</b>${j>0?`<br>왼쪽 칸 안쪽 <b>${fmt(xs[j]-xs[j-1]-uw[j-1])}</b>`:''}${j<xs.length-1?`<br>오른쪽 칸 안쪽 <b>${fmt(xs[j+1]-xs[j]-uw[j])}</b>`:''}<br>총 가로 <b>${fmt(tot)}</b>`;
+    tip.innerHTML=`기둥${j+1} · ${D.fine?`미세 ${D.fine>0?'+':''}${D.fine}mm`:st+'mm 단위'}<br>왼쪽 끝에서 <b>${fmt(xs[j]-xs[0])}</b>${j>0?`<br>왼쪽 칸 안쪽 <b>${fmt(xs[j]-xs[j-1]-uw[j-1])}</b>`:''}${j<xs.length-1?`<br>오른쪽 칸 안쪽 <b>${fmt(xs[j+1]-xs[j]-uw[j])}</b>`:''}<br>총 가로 <b>${fmt(tot)}</b>`;
     tip.hidden=false;tip.style.left=Math.min(e.clientX-rr.left+16,rr.width-190)+'px';tip.style.top=Math.max(e.clientY-rr.top-80,6)+'px';return}
   if(RD.drag){const D=RD.drag,q=rackById(D.rid);if(!q)return;const rr=rdsvg.getBoundingClientRect(),z=-(RD.y+(e.clientY-rr.top)/RD.s),st=10*RD.s>=2?10:50,tops=beamTops(q).slice(),bt=rBT(q),lo=(D.i?tops[D.i-1]:0)+bt+20,hi=D.i+1<tops.length?tops[D.i+1]-bt-20:+q.H;
-    let t=clamp(Math.round(z/st)*st,Math.ceil(lo/st)*st,Math.floor(hi/st)*st);if(lo>hi)return;tops[D.i]=t;D.moved=true;
+    if(lo>hi)return;let t=D.fine?clamp(Math.round(z/st)*st+D.fine,Math.ceil(lo/10)*10,Math.floor(hi/10)*10):clamp(Math.round(z/st)*st,Math.ceil(lo/st)*st,Math.floor(hi/st)*st);tops[D.i]=t;D.moved=true;
     for(const id of D.ids){const x=rackById(id);if(x&&(x.L|0)===tops.length&&+x.H>=tops[tops.length-1]){const tt=beamTops(x).slice();tt[D.i]=t;if(validTops(tt,+x.H,rBT(x)))x.lv=tt}}
     renderRD();const below=D.i?tops[D.i-1]:0,above=D.i+1<tops.length?tops[D.i+1]:+q.H,tip=$('#rdTip');
-    tip.innerHTML=`${D.i+1}단 빔 상단 · ${st}mm 단위<br>바닥에서 <b>${fmt(t)}</b><br>${D.i?'아래 빔 상단과':'바닥과'} <b>${fmt(t-below)}</b><br>${D.i+1<tops.length?'위 빔 상단과':'기둥 끝까지'} <b>${fmt(above-t)}</b>${D.i+1<tops.length?`<br>기둥 끝까지 <b>${fmt(+q.H-t)}</b>`:''}`;
+    tip.innerHTML=`${labels().lab.get(q.id)||''} ${D.i+1}단 빔 상단 · ${D.fine?`미세 ${D.fine>0?'+':''}${D.fine}mm`:st+'mm 단위'}<br>바닥에서 <b>${fmt(t)}</b><br>${D.i?'아래 빔 상단과':'바닥과'} <b>${fmt(t-below)}</b><br>${D.i+1<tops.length?'위 빔 상단과':'기둥 끝까지'} <b>${fmt(above-t)}</b>${D.i+1<tops.length?`<br>기둥 끝까지 <b>${fmt(+q.H-t)}</b>`:''}`;
     tip.hidden=false;tip.style.left=Math.min(e.clientX-rr.left+16,rr.width-190)+'px';tip.style.top=Math.max(e.clientY-rr.top-70,6)+'px';return}
-  if(!pd)return;RD.x=pd.vx-(e.clientX-pd.x)/RD.s;RD.y=pd.vy-(e.clientY-pd.y)/RD.s;RD.free=true;rdApply()});
-const up=()=>{pd=null;if(RD.udrag){const m=RD.udrag.moved;RD.udrag=null;RD.fixU0=null;$('#rdTip').hidden=true;if(m){RD.sig=sigOf(rackById(RD.id));commit();render()}renderRD();return}if(RD.drag){const m=RD.drag.moved;RD.drag=null;$('#rdTip').hidden=true;if(m){RD.sig=sigOf(rackById(RD.id));commit();render()}renderRD()}};
+  if(!pd)return;if(Math.hypot(e.clientX-pd.x,e.clientY-pd.y)>4)pd.moved=true;RD.x=pd.vx-(e.clientX-pd.x)/RD.s;RD.y=pd.vy-(e.clientY-pd.y)/RD.s;RD.free=true;rdApply()};
+rdsvg.addEventListener('pointermove',e=>{RD.lastE={clientX:e.clientX,clientY:e.clientY};rdMove(e)});RD.move=rdMove;
+const up=e=>{const p0=pd;pd=null;if(p0&&!p0.moved&&e&&e.type==='pointerup'&&!RD.drag&&!RD.udrag){const rr=rdsvg.getBoundingClientRect(),x=RD.x+(e.clientX-rr.left)/RD.s,y=RD.y+(e.clientY-rr.top)/RD.s,r=rackById(RD.id);if(r&&!(e.target.closest&&e.target.closest('[data-tx]'))){const hit=rowRun(r).find(q=>{const a=(q.rot?q.y:q.x)-RD.u0;return x>=a&&x<=a+ +q.W});if(hit&&hit.id!==RD.id&&y<RD.box.y+RD.box.h)rdPick(hit.id)}}if(RD.udrag){const m=RD.udrag.moved;RD.udrag=null;RD.fixU0=null;$('#rdTip').hidden=true;if(m){RD.sig=sigOf(rackById(RD.id));commit();render()}renderRD();return}if(RD.drag){const m=RD.drag.moved;RD.drag=null;$('#rdTip').hidden=true;if(m){RD.sig=sigOf(rackById(RD.id));commit();render()}renderRD()}};
 rdsvg.addEventListener('pointerup',up);rdsvg.addEventListener('pointercancel',up);}
 new ResizeObserver(()=>{if($('#rd').hidden)return;if(RD.free)rdApply();else rdFit()}).observe($('#rdCv'));
 function rdSheet(r,mode){const E=rdBuild(r,mode,false),ts=E.ts,b=E.box,th=ts*3.2,VB={x:b.x,y:b.y,w:b.w,h:b.h+th},sc=paperScale(VB),lab=labels().lab,c=E.run;E.VB=VB;
@@ -1925,7 +2019,7 @@ const CMDS=[
  ['tWall','도구','벽 편집 도구','2d',['W']],['tMeasure','도구','거리 재기 도구','2d',['M']],['tSpawn','도구','3D 시작점 도구','2d',['P']],
  ['undo','편집','되돌리기','2d',['Ctrl+Z']],['redo','편집','다시 실행','2d',['Ctrl+Y','Ctrl+Shift+Z']],
  ['rotate','편집','회전 (랙 · H빔 90° · 출입구 방향)','2d',['R']],['dup','편집','복제','2d',['Ctrl+D']],['del','편집','삭제','2d',['Del','Backspace']],
- ['confirm','편집','임시 랙 설치 확정','2d',['Enter']],['cancel','편집','취소 · 선택 해제','2d',['Esc']],['selAll','편집','랙 전체 선택','2d',['Ctrl+A']],
+ ['confirm','편집','임시 랙 설치 확정','2d',['Enter']],['cancel','편집','취소 · 선택 해제','2d',['Esc']],['selAll','편집','랙 전체 선택','2d',['Ctrl+A']],['shareJoin','편집','옆 랙과 기둥 공유 (붙이기)','2d',['J']],['shareSplit','편집','기둥 공유 풀기 (띄우기)','2d',['Shift+J']],
  ['mU','편집','위로 이동 (격자 단위)','2d',['↑']],['mD','편집','아래로 이동 (격자 단위)','2d',['↓']],['mL','편집','왼쪽으로 이동 (격자 단위)','2d',['←']],['mR','편집','오른쪽으로 이동 (격자 단위)','2d',['→']],
  ['MU','편집','위로 크게 이동 (1 m)','2d',['Shift+↑']],['MD','편집','아래로 크게 이동 (1 m)','2d',['Shift+↓']],['ML','편집','왼쪽으로 크게 이동 (1 m)','2d',['Shift+←']],['MR','편집','오른쪽으로 크게 이동 (1 m)','2d',['Shift+→']],
  ['zIn','보기','확대','2d',['=']],['zOut','보기','축소','2d',['-']],['fitRoom','보기','창고에 맞춤','2d',['0']],['fitSheet','보기','도면 전체 보기','2d',['F']],
@@ -1957,7 +2051,7 @@ const keysOf=id=>(KEYS[id]||[]).filter(Boolean).map(keyDisp).join(' / ');
 const HOLD={},H3={f3:'f',b3:'b',l3:'l',r3:'r',tl3:'tl',tr3:'tr',fast3:'shift'};
 function setHold(id,v){if(HOLD[id]===v)return;HOLD[id]=v;if(id==='pan'){spaceDown=v;$('#cv').classList.toggle('spacepan',v)}else if(H3[id]&&T)T.keys[H3[id]]=v}
 const grid=()=>+S.grid||100;
-const RUN={tSelect:()=>setTool('select'),tRack:()=>setTool('rack'),tBeam:()=>setTool('beam'),tDoor:()=>setTool('door'),tWall:()=>setTool('wall'),tMeasure:()=>setTool('measure'),tSpawn:()=>setTool('spawn'),goods:()=>toggleGoods(),tDeck:()=>setTool('deck'),tText:()=>{if(viewEl)startPlace('elev');else if(!view3d)setTool('text')},vElev:()=>setView('elev'),shNext:()=>setSheet((S.cur+1)%S.sheets.length),shPrev:()=>setSheet((S.cur-1+S.sheets.length)%S.sheets.length),
+const RUN={shareJoin:()=>{if(Sel.r.size)shareJoin(Sel.r);else toast('먼저 랙을 선택하세요.')},shareSplit:()=>{if(Sel.r.size)shareSplit(Sel.r);else toast('먼저 랙을 선택하세요.')},tSelect:()=>setTool('select'),tRack:()=>setTool('rack'),tBeam:()=>setTool('beam'),tDoor:()=>setTool('door'),tWall:()=>setTool('wall'),tMeasure:()=>setTool('measure'),tSpawn:()=>setTool('spawn'),goods:()=>toggleGoods(),tDeck:()=>setTool('deck'),tText:()=>{if(viewEl)startPlace('elev');else if(!view3d)setTool('text')},vElev:()=>setView('elev'),shNext:()=>setSheet((S.cur+1)%S.sheets.length),shPrev:()=>setSheet((S.cur-1+S.sheets.length)%S.sheets.length),
   el0:()=>setElevA(0),el90:()=>setElevA(90),el180:()=>setElevA(180),el270:()=>setElevA(270),elL:()=>setElevA(S.elev.a-15),elR:()=>setElevA(S.elev.a+15),elFit:()=>evFit(),elZi:()=>$('#elZi').click(),elZo:()=>$('#elZo').click(),elDims:()=>$('#el_dims').click(),elAll:()=>$('#el_all').click(),
   undo,redo,rotate:()=>{rotSel();if(tool==='rack'&&ghost){ghost=null;renderOv()}},dup,del,confirm:()=>{if(pend)confirmPend()},
   cancel:()=>{if(pend){cancelPend();return}Sel.r.clear();Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.v=null;meas=null;marquee=null;setTool('select');render()},
