@@ -154,6 +154,8 @@ table.vt tr.on td{background:var(--accent-soft)}
 #qbar.door>:not(#dbar){display:none!important}
 #qbar.door>#dbar{display:flex}#qbar.door #dbPos.on{display:flex}
 #qbar.beam>#hbar{display:flex}
+#mbar,#pwbar{display:none;flex-wrap:wrap;gap:6px 10px;align-items:center;flex-basis:100%}#mbLab,#pwLab{font-size:12px;font-weight:600;color:var(--steel);min-width:74px}#mbar select,#pwbar select{width:auto;padding:3px 5px}#qbar #m_nm{width:120px}#qbar #m_sub{width:200px}#mGeo{display:inline-flex;gap:6px 10px;flex-wrap:wrap;align-items:center}#mGeo[hidden],#mNmL[hidden],#mSubL[hidden],#mAutoL[hidden],#pwLenL[hidden]{display:none!important}
+#qbar.room>:not(#mbar){display:none!important}#qbar.room>#mbar{display:flex}#qbar.pwall>:not(#pwbar){display:none!important}#qbar.pwall>#pwbar{display:flex}
 #qbar input[id=q_L],#qbar input[id=q_P]{width:46px}#qbar input[id=q_uw],#qbar input[id=q_bt]{width:58px}
 #gapRow{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding-top:6px;border-top:1px dashed var(--line)}
 #gapRow[hidden],#wfRow[hidden]{display:none!important}
@@ -306,6 +308,8 @@ body.placing #elsvg,body.placing #rdsvg{cursor:crosshair!important}
       <button data-tool="rack" title="랙 놓기 (A)">랙 놓기</button>
       <button data-tool="beam" title="H빔 기둥 (B)">H빔</button>
       <button data-tool="door" title="출입구 (D)">출입구</button>
+      <button data-tool="room" title="공간·가벽 (Q)">공간</button>
+      <button data-tool="pwall" title="가벽 그리기 (E)">가벽</button>
       <button data-tool="text" title="텍스트 (T)">텍스트 넣기</button>
       <button data-tool="wall" title="벽 꼭짓점 편집 (W)">벽 편집</button>
       <button data-tool="measure" title="거리 재기 (M)">거리</button>
@@ -468,6 +472,26 @@ body.placing #elsvg,body.placing #rdsvg{cursor:crosshair!important}
           <button class="btn sm" id="dbFlip">경첩 반대로</button>
           <span id="dbPos"><label><b id="dbA">P1</b>에서<input id="db_s0" type="number" step="10" min="0"></label><label><b id="dbB">P2</b>까지<input id="db_s1" type="number" step="10" min="0"></label><span class="kv">mm (모서리 실측값)</span></span>
           <span class="kv" id="dbNote"></span>
+        </div>
+        <div id="mbar">
+          <span id="mbLab">새 공간</span>
+          <label id="mNmL">이름<input id="m_nm" type="text" maxlength="30"></label>
+          <label>종류<select id="m_kind"><option value="cool">냉장 (워크인 쿨러)</option><option value="freeze">냉동 (프리저)</option><option value="dry">상온 창고</option><option value="office">사무실·작업실</option><option value="etc">기타</option></select></label>
+          <label>벽체<select id="m_mat"><option value="ure">우레탄 단열 패널</option><option value="eps">EPS 샌드위치 패널</option><option value="gyp">경량 칸막이(석고)</option><option value="mesh">메쉬 펜스</option></select></label>
+          <label>두께<input id="m_t" type="number" step="10" min="10" max="400"></label>
+          <label>벽 높이<input id="m_h3" type="number" step="100" min="500"></label>
+          <span id="mGeo"><label>X<input id="m_x" type="number" step="10"></label><label>Y<input id="m_y" type="number" step="10"></label><label>가로<input id="m_w" type="number" step="10" min="600"></label><label>세로<input id="m_h" type="number" step="10" min="600"></label></span>
+          <label id="mSubL">설명<input id="m_sub" type="text" maxlength="60" placeholder="비우면 자동"></label>
+          <label class="chk" id="mAutoL"><input id="m_auto" type="checkbox">안에도 랙 자동 배치</label>
+          <span class="kv" id="mNote"></span>
+        </div>
+        <div id="pwbar">
+          <span id="pwLab">새 가벽</span>
+          <label>벽체<select id="pw_mat"><option value="ure">우레탄 단열 패널</option><option value="eps">EPS 샌드위치 패널</option><option value="gyp">경량 칸막이(석고)</option><option value="mesh">메쉬 펜스</option></select></label>
+          <label>두께<input id="pw_t" type="number" step="10" min="10" max="400"></label>
+          <label>높이<input id="pw_h3" type="number" step="100" min="500"></label>
+          <label id="pwLenL">길이<input id="pw_len" type="number" step="10" min="100"></label>
+          <span class="kv" id="pwNote"></span>
         </div>
         <div id="hbar">
           <span id="hbLab">H빔 규격</span>
@@ -667,12 +691,12 @@ function defaults(){return{
   spec:{W:2600,D:1000,H:3000,L:2,P:2,floor:false,uw:100,bt:100},
   lay:{dir:'x',gap:100,back:200,aisle:3000,wall:500,col:300,single:true,wallFit:0,share:true},
   beamSize:300, beamW:300, beamH:300, bgrid:{x:10000,y:10000}, grid:100,
-  racks:[],beams:[],doors:[],decks:[],texts:[],sheets:[{id:'s1',name:'1층',kind:'floor',racks:[],texts:[]}],cur:0,deckZ:3000,deckT:100,elev:{a:0,all:true,dims:true},txt:{size:5,font:'sans',bold:false,color:'ink'},spawn:null,doorW:1000,doorH:2000,doorKind:'swing',doorOut:false,
+  racks:[],beams:[],doors:[],rooms:[],pwalls:[],roomDef:{kind:'cool',mat:'ure',t:100,h3:3000},pwDef:{mat:'ure',t:100,h3:3000},decks:[],texts:[],sheets:[{id:'s1',name:'1층',kind:'floor',racks:[],texts:[]}],cur:0,deckZ:3000,deckT:100,elev:{a:0,all:true,dims:true},txt:{size:5,font:'sans',bold:false,color:'ink'},spawn:null,doorW:1000,doorH:2000,doorKind:'swing',doorOut:false,
   show:{sheet:true,dims:true,grid:true,pallets:true,labels:true,aisles:true,axes:true,inst:true,instEdit:false,goods:true}
 }}
 function sample(){const d=defaults(); beamGrid(d); autoLayout(d); d.sheets[0].racks=d.racks; return normSheets(d)}
 function normBeams(st){(st.beams||[]).forEach(b=>{if(!(b.w>0))b.w=b.s||300;if(!(b.h>0))b.h=b.s||300;delete b.s});if(!(st.beamW>0))st.beamW=+st.beamSize||300;if(!(st.beamH>0))st.beamH=+st.beamSize||300;return st}
-function merge(o){normBeams(o);const d=defaults();return normSheets({...d,...o,meta:{...d.meta,...o.meta},spec:{...d.spec,...o.spec},lay:{...d.lay,...o.lay},bgrid:{...d.bgrid,...o.bgrid},show:{...d.show,...o.show},elev:{...d.elev,...o.elev},txt:{...d.txt,...o.txt}})}
+function merge(o){normBeams(o);const d=defaults();return normSheets({...d,...o,roomDef:{...d.roomDef,...o.roomDef},pwDef:{...d.pwDef,...o.pwDef},meta:{...d.meta,...o.meta},spec:{...d.spec,...o.spec},lay:{...d.lay,...o.lay},bgrid:{...d.bgrid,...o.bgrid},show:{...d.show,...o.show},elev:{...d.elev,...o.elev},txt:{...d.txt,...o.txt}})}
 function load(){try{const t=localStorage.getItem(LS);if(t){const o=JSON.parse(t);if(Array.isArray(o.poly)&&o.poly.length>=3)return merge(o)}}catch(e){}return sample()}
 let S;
 let hist=[],hi=-1;
@@ -681,9 +705,9 @@ function commit(){mergeNorm();link();const j=JSON.stringify(S);if(j===hist[hi])r
 function undo(){if(hi>0){hi--;S=normSheets(JSON.parse(hist[hi]));save(hist[hi]);afterLoad()}}
 function redo(){if(hi<hist.length-1){hi++;S=normSheets(JSON.parse(hist[hi]));save(hist[hi]);afterLoad()}}
 function updUndo(){$('#bUndo').disabled=hi<=0;$('#bRedo').disabled=hi>=hist.length-1}
-function afterLoad(){Sel.r=new Set([...Sel.r].filter(id=>S.racks.some(r=>r.id===id)));if(Sel.b&&!S.beams.some(b=>b.id===Sel.b))Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;if(Sel.v!=null&&Sel.v>=S.poly.length)Sel.v=null;if(Sel.d&&!(S.doors||[]).some(d=>d.id===Sel.d))Sel.d=null;if(Sel.k&&!deckById(Sel.k))Sel.k=null;if(Sel.t&&!textById(Sel.t))Sel.t=null;renderSheets();syncInputs();renderVerts();renderSel();render();updUndo()}
+function afterLoad(){Sel.r=new Set([...Sel.r].filter(id=>S.racks.some(r=>r.id===id)));if(Sel.b&&!S.beams.some(b=>b.id===Sel.b))Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.m=null;Sel.w=null;if(Sel.v!=null&&Sel.v>=S.poly.length)Sel.v=null;if(Sel.d&&!(S.doors||[]).some(d=>d.id===Sel.d))Sel.d=null;if(Sel.k&&!deckById(Sel.k))Sel.k=null;if(Sel.t&&!textById(Sel.t))Sel.t=null;if(Sel.m&&!roomById(Sel.m))Sel.m=null;if(Sel.w&&!pwById(Sel.w))Sel.w=null;renderSheets();syncInputs();renderVerts();renderSel();render();updUndo()}
 
-const Sel={r:new Set(),b:null,v:null,e:null,d:null,k:null,t:null};
+const Sel={r:new Set(),b:null,v:null,e:null,d:null,k:null,t:null,m:null,w:null};
 let viewEl=false;
 let tool='select', ghost=null, ghostRot=0, meas=null, marquee=null, pend=null;
 
@@ -720,7 +744,7 @@ function autoLayout(st){
     const rows=[];let v=V0+o.wall;
     if(o.single){rows.push(v);v+=D+o.aisle}
     let guard=0;while(v+D<=V1&&guard++<500){rows.push(v);rows.push(v+D+o.back);v+=2*D+o.back+o.aisle}
-    const fits=f=>{if(!rectIn(f,RG)||!rectIn(f,st.poly))return false;if(wallDist(f,RG)<o.wall-0.5)return false;if(dsh&&wallDist(f,st.poly)<o.wall-0.5)return false;for(const b of bR)if(ov(f,b,o.col-0.5))return false;for(const q of out)if(ov(f,fp(q),-1)&&!shareOv(f,fp(q),ax?0:1,+st.spec.uw||100))return false;return true};
+    const fits=f=>{if(!rectIn(f,RG)||!rectIn(f,st.poly))return false;if(wallDist(f,RG)<o.wall-0.5)return false;if(dsh&&wallDist(f,st.poly)<o.wall-0.5)return false;for(const b of bR)if(ov(f,b,o.col-0.5))return false;if(!dsh){for(const rm of st.rooms||[])if(!rm.auto&&ov(f,{x:rm.x,y:rm.y,w:rm.w,h:rm.h},-1))return false;if((st.rooms||[]).length||(st.pwalls||[]).length){if(partHit(f))return false;if(partDist(f)<o.wall-0.5)return false}}for(const q of out)if(ov(f,fp(q),-1)&&!shareOv(f,fp(q),ax?0:1,+st.spec.uw||100))return false;return true};
     for(const rv of rows){
       if(rv+D>V1-o.wall+0.5)continue;
       let u=U0+o.wall;
@@ -744,11 +768,22 @@ function analyze(){
     if(!rectIn(f,S.poly))add(r.id,'err','벽 밖으로 나감');else if(wallDist(f,S.poly)<wallMin()-0.5)add(r.id,'warn',`벽 이격 ${fmt(wallMin())} 미만`);
     for(let j=i+1;j<fps.length;j++)if(ov(f,fps[j],-1)&&!shared(r,S.racks[j])){add(r.id,'err','다른 랙과 겹침');add(S.racks[j].id,'err','다른 랙과 겹침')}
     for(const b of bR){if(ov(f,b,-1))add(r.id,'err','H빔과 겹침');else if(ov(f,b,o.col-0.5))add(r.id,'warn',`H빔 이격 ${fmt(o.col)} 미만`)}
+    {const ph=partHit(f);if(ph)add(r.id,'err',ph.kind==='room'?`${(roomById(ph.id)||{}).name||'공간'} 가벽과 겹침`:'가벽과 겹침');else if(partSegs().length&&partDist(f)<wallMin()-0.5)add(r.id,'warn',`가벽 이격 ${fmt(wallMin())} 미만`)}
     const dsh=isDeckSheet();
     if(!dsh)(S.doors||[]).forEach((d,k)=>{if(ov(f,doorZone(d,doorGeo(d)),-1))add(r.id,'warn',`출입구${k+1} 앞을 막음`)});
     if(dsh){const dk=(S.decks||[]).find(d=>f.x>=d.x-0.5&&f.y>=d.y-0.5&&f.x+f.w<=d.x+d.w+0.5&&f.y+f.h<=d.y+d.h+0.5);if(!dk)add(r.id,'err','데크 밖으로 나감');else if(dk.z+r.H>S.ceil)add(r.id,'warn',`천장까지 ${fmt(S.ceil-dk.z)}뿐임`)}
     else for(const dk of S.decks||[]){if(ov(f,dk,-1)&&r.H>dk.z-dk.t)add(r.id,'warn',`데크 하부(${fmt(dk.z-dk.t)})보다 높음`)}
   });
+  const segs=partSegs();
+  (S.rooms||[]).forEach((rm,i)=>{const sg=segs.filter(q=>q.id===rm.id);
+    if(sg.some(q=>segQuad(q).some(p=>!pip(p[0],p[1],S.poly)&&edgeDist(p[0],p[1],S.poly)>2)))add(rm.id,'err','가벽이 창고 밖으로 나감');
+    if(rm.w<1000||rm.h<1000)add(rm.id,'warn','공간이 너무 작음 (1m 미만)');
+    for(const o of (S.rooms||[]).slice(i+1)){const ix=Math.min(rm.x+rm.w,o.x+o.w)-Math.max(rm.x,o.x),iy=Math.min(rm.y+rm.h,o.y+o.h)-Math.max(rm.y,o.y);if(ix>(+rm.t||100)+1&&iy>(+rm.t||100)+1){add(rm.id,'warn',`${o.name||'다른 공간'}과 겹침`);add(o.id,'warn',`${rm.name||'다른 공간'}과 겹침`)}}
+    if(sg.length&&!roomDoors(rm).length)add(rm.id,'warn','출입문 없음');
+    for(const b of S.beams)if(sg.some(q=>quadHitsRect(segQuad(q),beamRect(b))))add(rm.id,'warn','H빔 기둥이 가벽에 걸림');
+  });
+  (S.pwalls||[]).forEach(w=>{const q=segs.find(x=>x.id===w.id);if(q&&segQuad(q).some(p=>!pip(p[0],p[1],S.poly)&&edgeDist(p[0],p[1],S.poly)>2))add(w.id,'err','가벽이 창고 밖으로 나감')});
+  (S.doors||[]).forEach((d,k)=>{if(d.host&&!partSegs().some(q=>q.host===d.host))d.host=''});
   return m;
 }
 function labels(){
@@ -792,20 +827,62 @@ let PAPER={name:'A3',w:400,h:277,fit:false};
 function paperScale(L){if(PAPER.fit)return Math.max(1,Math.ceil(Math.max(L.w/PAPER.w,L.h/PAPER.h)));for(const s of [50,100,150,200,250,300,400,500,600,800,1000,1500,2000,3000])if(L.w/s<=PAPER.w&&L.h/s<=PAPER.h)return s;return 5000}
 
 
+
+/* ---------------- 공간(워크인) · 가벽 ---------------- */
+const ROOMK={cool:{n:'냉장',en:'COOLER'},freeze:{n:'냉동',en:'FREEZER'},dry:{n:'상온 창고',en:'DRY STORAGE'},office:{n:'사무실·작업실',en:'OFFICE'},etc:{n:'기타 공간',en:'ROOM'}};
+const PMAT={ure:'우레탄 단열 패널',eps:'EPS 샌드위치 패널',gyp:'경량 칸막이(석고)',mesh:'메쉬 펜스'};
+const roomById=id=>(S.rooms||[]).find(r=>r.id===id),pwById=id=>(S.pwalls||[]).find(w=>w.id===id);
+const SIDEN={T:'위',B:'아래',L:'왼쪽',R:'오른쪽'};
+function ivSub(iv,l,h){const o=[];for(const[a,b]of iv){if(h<=a||l>=b){o.push([a,b]);continue}if(l>a)o.push([a,l]);if(h<b)o.push([h,b])}return o}
+let PSEG=null,PSEGK='';
+function partSegs(){
+  const key=JSON.stringify([S.rooms,S.pwalls,S.poly]);if(PSEG&&key===PSEGK)return PSEG;
+  const P=S.poly,TOL=30,out=[],EA=[];
+  P.forEach((a,i)=>{const b=P[(i+1)%P.length];if(Math.abs(a[1]-b[1])<1)EA.push({ax:'h',c:a[1],lo:Math.min(a[0],b[0]),hi:Math.max(a[0],b[0])});else if(Math.abs(a[0]-b[0])<1)EA.push({ax:'v',c:a[0],lo:Math.min(a[1],b[1]),hi:Math.max(a[1],b[1])})});
+  const used=[];
+  for(const m of S.rooms||[]){const t=Math.max(10,+m.t||100),x0=m.x,y0=m.y,x1=m.x+m.w,y1=m.y+m.h,mine=[];
+    for(const[sd,ax,c,lo,hi,N]of[['T','h',y0,x0,x1,[0,1]],['B','h',y1,x0,x1,[0,-1]],['L','v',x0,y0,y1,[1,0]],['R','v',x1,y0,y1,[-1,0]]]){
+      let iv=[[lo,hi]];for(const e of EA)if(e.ax===ax&&Math.abs(e.c-c)<=TOL)iv=ivSub(iv,e.lo,e.hi);
+      for(const u of used)if(u.ax===ax&&Math.abs(u.c-c)<=Math.max(u.t,TOL)+0.5)iv=ivSub(iv,u.lo,u.hi);
+      iv.filter(([a,b])=>b-a>=Math.max(50,t)).forEach(([a,b],k)=>{const A=ax==='h'?[a,c]:[c,a],B=ax==='h'?[b,c]:[c,b];
+        mine.push({key:`r:${m.id}:${sd}:${k}`,host:`r:${m.id}:${sd}`,kind:'room',id:m.id,side:sd,a:A,b:B,N,T:t,H:+m.h3||3000,mat:m.mat||'ure',ax,c,lo:a,hi:b,len:b-a})})}
+    mine.forEach(q=>{out.push(q);used.push({ax:q.ax,c:q.c,lo:q.lo,hi:q.hi,t:q.T})})}
+  for(const w of S.pwalls||[]){const dx=w.b[0]-w.a[0],dy=w.b[1]-w.a[1],L=Math.hypot(dx,dy);if(L<1)continue;const t=Math.max(10,+w.t||100),N=[-dy/L,dx/L],h=t/2;
+    const A=[w.a[0]-N[0]*h,w.a[1]-N[1]*h],B=[w.b[0]-N[0]*h,w.b[1]-N[1]*h];
+    out.push({key:'p:'+w.id,host:'p:'+w.id,kind:'pw',id:w.id,a:A,b:B,N,T:t,H:+w.h3||3000,mat:w.mat||'ure',ax:Math.abs(dy)<1?'h':Math.abs(dx)<1?'v':'d',len:L})}
+  PSEG=out;PSEGK=key;return out}
+const segQuad=q=>[q.a,q.b,[q.b[0]+q.N[0]*q.T,q.b[1]+q.N[1]*q.T],[q.a[0]+q.N[0]*q.T,q.a[1]+q.N[1]*q.T]];
+function quadHitsRect(Q,f){const g={x:f.x+0.5,y:f.y+0.5,w:f.w-1,h:f.h-1},bb=bbox(Q);if(!ov(g,{x:bb.minX,y:bb.minY,w:bb.w,h:bb.h},0))return false;
+  for(let i=0;i<4;i++)if(segRectDist(Q[i],Q[(i+1)%4],g)===0)return true;if(pip(g.x+g.w/2,g.y+g.h/2,Q))return true;return false}
+function partHit(f,ex){for(const q of partSegs()){if(ex&&ex.has(q.id))continue;if(quadHitsRect(segQuad(q),f))return q}return null}
+function partDist(f,ex){let m=1e18;for(const q of partSegs()){if(ex&&ex.has(q.id))continue;const Q=segQuad(q);for(let i=0;i<4;i++)m=Math.min(m,segRectDist(Q[i],Q[(i+1)%4],f))}return m}
+function clipRect(P,r){let o=P.slice();const H=[[p=>p[0]>=r.x,(a,b)=>{const t=(r.x-a[0])/(b[0]-a[0]);return[r.x,a[1]+(b[1]-a[1])*t]}],[p=>p[0]<=r.x+r.w,(a,b)=>{const t=(r.x+r.w-a[0])/(b[0]-a[0]);return[r.x+r.w,a[1]+(b[1]-a[1])*t]}],[p=>p[1]>=r.y,(a,b)=>{const t=(r.y-a[1])/(b[1]-a[1]);return[a[0]+(b[0]-a[0])*t,r.y]}],[p=>p[1]<=r.y+r.h,(a,b)=>{const t=(r.y+r.h-a[1])/(b[1]-a[1]);return[a[0]+(b[0]-a[0])*t,r.y+r.h]}]];
+  for(const[inside,cut]of H){const I=o;o=[];for(let i=0;i<I.length;i++){const a=I[i],b=I[(i+1)%I.length],ia=inside(a),ib=inside(b);if(ia){o.push(a);if(!ib)o.push(cut(a,b))}else if(ib)o.push(cut(a,b))}if(!o.length)break}return o}
+function roomShape(m){return clipRect(S.poly,{x:m.x,y:m.y,w:m.w,h:m.h})}
+function roomArea(m){const q=roomShape(m);return q.length>=3?Math.abs(area(q))/1e6:0}
+const pyeong=a=>a/3.305785;
+function roomInner(m){const sg=partSegs().filter(q=>q.id===m.id),has=sd=>sg.some(q=>q.side===sd),tt=+m.t||100;return{w:m.w-(has('L')?tt:0)-(has('R')?tt:0),h:m.h-(has('T')?tt:0)-(has('B')?tt:0)}}
+function roomDoors(m){return (S.doors||[]).filter(d=>d.host&&d.host.startsWith('r:'+m.id+':'))}
+function partTotals(){let len=0,ar=0;const by=new Map();for(const q of partSegs()){len+=q.len;ar+=q.len*Math.min(q.H,+S.ceil||q.H);const k=`${PMAT[q.mat]||PMAT.ure} ${fmt(q.T)}T`;by.set(k,(by.get(k)||0)+q.len)}return{len,ar,by}}
 /* ---------------- 출입구 ---------------- */
 const doorById=id=>(S.doors||[]).find(d=>d.id===id);
-function doorGeo(d,snap){
-  const P=S.poly,N=normals(P);let bi=0,bd=Infinity;
-  for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length],q=psd(d.x,d.y,a[0],a[1],b[0],b[1]);if(q<bd){bd=q;bi=i}}
-  const a=P[bi],b=P[(bi+1)%P.length],len=Math.hypot(b[0]-a[0],b[1]-a[1])||1,u=[(b[0]-a[0])/len,(b[1]-a[1])/len],w=Math.min(d.w,len);
+function doorGeo(d,snap,any){
+  const P=S.poly,N0=normals(P),C=[],segs=partSegs();
+  if(any||!d.host)P.forEach((a,i)=>C.push({a,b:P[(i+1)%P.length],N:N0[i],T:+S.wallT||0,i,host:'',seg:null}));
+  const hs=any?segs:d.host?segs.filter(q=>q.host===d.host):[];hs.forEach(q=>C.push({a:q.a,b:q.b,N:q.N,T:q.T,i:-1,host:q.host,seg:q}));
+  if(!C.length)P.forEach((a,i)=>C.push({a,b:P[(i+1)%P.length],N:N0[i],T:+S.wallT||0,i,host:'',seg:null}));
+  let E=C[0],bd=Infinity;for(const c of C){const q=psd(d.x,d.y,c.a[0],c.a[1],c.b[0],c.b[1]);if(q<bd-0.01){bd=q;E=c}}
+  const a=E.a,b=E.b,len=Math.hypot(b[0]-a[0],b[1]-a[1])||1,u=[(b[0]-a[0])/len,(b[1]-a[1])/len],w=Math.min(d.w,len);
   let t=(d.x-a[0])*u[0]+(d.y-a[1])*u[1];if(snap){const g=+S.grid||100;t=Math.round((t-w/2)/g)*g+w/2}t=clamp(t,w/2,len-w/2);
-  const at=q=>[a[0]+u[0]*q,a[1]+u[1]*q],n=N[bi];
-  return{i:bi,a,b,len,u,t,w,c:at(t),p1:at(t-w/2),p2:at(t+w/2),N:n,nin:[-n[0],-n[1]],s0:t-w/2,s1:len-t-w/2};
+  const at=q=>[a[0]+u[0]*q,a[1]+u[1]*q],n=E.N,n2=P.length;let nA,nB,wall;
+  if(E.seg){const hz=Math.abs(u[0])>=Math.abs(u[1]);nA=hz?(u[0]>0?'왼쪽 끝':'오른쪽 끝'):(u[1]>0?'위쪽 끝':'아래쪽 끝');nB=hz?(u[0]>0?'오른쪽 끝':'왼쪽 끝'):(u[1]>0?'아래쪽 끝':'위쪽 끝');const rm=E.seg.kind==='room'?roomById(E.seg.id):null;wall=rm?`${rm.name||'공간'} ${SIDEN[E.seg.side]}쪽 가벽`:'가벽'}
+  else{nA='P'+(E.i+1);nB='P'+((E.i+1)%n2+1);wall=`${nA}→${nB}`}
+  return{i:E.i,a,b,len,u,t,w,c:at(t),p1:at(t-w/2),p2:at(t+w/2),N:n,nin:[-n[0],-n[1]],s0:t-w/2,s1:len-t-w/2,T:E.T,host:E.host,seg:E.seg,nA,nB,wall};
 }
 const KN={swing:'여닫이문',slide:'슬라이드문',shutter:'셔터·개구부'};
-function doorFix(d,snap){const g=doorGeo(d,snap);d.x=Math.round(g.c[0]);d.y=Math.round(g.c[1]);return g}
+function doorFix(d,snap,any){const g=doorGeo(d,snap,any);if(any)d.host=g.host||'';d.x=Math.round(g.c[0]);d.y=Math.round(g.c[1]);return g}
 function doorSym(d,g){
-  const T=+S.wallT||0,add=(p,v,k)=>[p[0]+v[0]*k,p[1]+v[1]*k],o={jamb:[[g.p1,add(g.p1,g.N,T)],[g.p2,add(g.p2,g.N,T)]],leaf:[],arc:[],dash:[],panel:null,open:null,arrow:[]};
+  const T=g.T,add=(p,v,k)=>[p[0]+v[0]*k,p[1]+v[1]*k],o={jamb:[[g.p1,add(g.p1,g.N,T)],[g.p2,add(g.p2,g.N,T)]],leaf:[],arc:[],dash:[],panel:null,open:null,arrow:[]};
   if(d.kind==='shutter'){const k=Math.min(120,g.w*0.08);o.dash.push([add(g.p1,g.nin,k),add(g.p2,g.nin,k)]);o.leaf.push([add(g.p1,g.N,T*0.5),add(g.p2,g.N,T*0.5)])}
   else if(d.kind==='slide'){const sg=d.flip?-1:1,face=(p,k)=>d.out?add(p,g.N,T+k):add(p,g.nin,k),k0=40,pt=60,ps=sg>0?g.p2:g.p1,pe=add(ps,g.u,sg*g.w);
     o.panel=[face(ps,k0),face(pe,k0),face(pe,k0+pt),face(ps,k0+pt)];o.open=[g.p1,g.p2,add(g.p2,g.N,T),add(g.p1,g.N,T)];o.dash.push([face(g.p1,k0+pt/2),face(g.p2,k0+pt/2)]);
@@ -818,7 +895,7 @@ function doorSym(d,g){
 function doorZone(d,g){const D=d.kind==='shutter'?1500:d.kind==='slide'?1000:Math.max(g.w,1000),q=[g.p1,g.p2,[g.p2[0]+g.nin[0]*D,g.p2[1]+g.nin[1]*D],[g.p1[0]+g.nin[0]*D,g.p1[1]+g.nin[1]*D]],bb=bbox(q);return{x:bb.minX,y:bb.minY,w:bb.w,h:bb.h,q}}
 function doorLabel(i,d){return `출입구${i+1} ${fmt(d.w)}×${fmt(d.h)}`}
 function doorSVG(d,i,ts,interactive,cls=''){
-  const g=doorGeo(d),T=+S.wallT||0,e=ts*0.2,sym=doorSym(d,g),add=(p,v,k)=>[p[0]+v[0]*k,p[1]+v[1]*k];
+  const g=doorGeo(d),T=g.T,e=ts*0.2,sym=doorSym(d,g),add=(p,v,k)=>[p[0]+v[0]*k,p[1]+v[1]*k];
   const cut=[add(g.p1,g.nin,e),add(g.p2,g.nin,e),add(g.p2,g.N,T+e),add(g.p1,g.N,T+e)].map(p=>R1(p[0])+','+R1(p[1])).join(' ');
   const L2=(p,q,c)=>ln(p[0],p[1],q[0],q[1],c);
   let s=`<g class="door${cls}"${interactive?` data-k="door:${d.id}"`:''}><polygon class="dcut" points="${cut}"/>`;
@@ -897,7 +974,7 @@ function drawingSVG({L,AN,LB,interactive,noTexts}){
   const ts=L.ts,bb=L.bb,P=S.poly,sh=S.show;
   const pts=P.map(v=>R1(v[0])+','+R1(v[1])).join(' ');
   const hp=R1(ts*0.45);
-  const defs=`<pattern id="hatch" patternUnits="userSpaceOnUse" width="${hp}" height="${hp}" patternTransform="rotate(45)"><line class="hl" x1="0" y1="0" x2="0" y2="${hp}"/></pattern><clipPath id="flc"><polygon points="${pts}"/></clipPath><pattern id="dkh" patternUnits="userSpaceOnUse" width="${R1(ts*0.7)}" height="${R1(ts*0.7)}" patternTransform="rotate(-45)"><line class="dkhl" x1="0" y1="0" x2="0" y2="${R1(ts*0.7)}"/></pattern>`;
+  const defs=`<pattern id="hatch" patternUnits="userSpaceOnUse" width="${hp}" height="${hp}" patternTransform="rotate(45)"><line class="hl" x1="0" y1="0" x2="0" y2="${hp}"/></pattern><pattern id="pwh" patternUnits="userSpaceOnUse" width="40" height="40" patternTransform="rotate(-45)"><rect width="40" height="40" fill="#f4f7fa"/><line class="pwh1" x1="0" y1="0" x2="0" y2="40"/></pattern><clipPath id="flc"><polygon points="${pts}"/></clipPath><pattern id="dkh" patternUnits="userSpaceOnUse" width="${R1(ts*0.7)}" height="${R1(ts*0.7)}" patternTransform="rotate(-45)"><line class="dkhl" x1="0" y1="0" x2="0" y2="${R1(ts*0.7)}"/></pattern>`;
   let s='';
   if(sh.sheet)s+=rc(L.x,L.y,L.w,L.h,'paper')+rc(L.x+ts*0.5,L.y+ts*0.5,L.w-ts,L.h-ts,'border');
   s+=`<polygon class="floor" points="${pts}"/>`;
@@ -908,7 +985,12 @@ function drawingSVG({L,AN,LB,interactive,noTexts}){
     s+=`<g clip-path="url(#flc)">${g}</g>`;
   }
   if(S.wallT>0){const op=offsetPoly(P,S.wallT);const d=v=>v.map(q=>R1(q[0])+' '+R1(q[1])).join('L');s+=`<path class="wallband" fill-rule="evenodd" d="M${d(op)}Z M${d(P)}Z"/><polygon class="wallo" points="${op.map(v=>R1(v[0])+','+R1(v[1])).join(' ')}"/>`}
+  // 공간 바탕
+  for(const m of S.rooms||[]){const q=roomShape(m);if(q.length>=3)s+=`<polygon class="rmf ${m.kind||'cool'}" points="${q.map(p=>R1(p[0])+','+R1(p[1])).join(' ')}"/>`}
   s+=`<polygon class="wall" points="${pts}"/>`;
+  // 가벽
+  for(const q of partSegs()){const Q=segQuad(q),sel=interactive&&((q.kind==='room'&&Sel.m===q.id)||(q.kind==='pw'&&Sel.w===q.id));
+    s+=`<g class="pwg${sel?' sel':''}"${interactive?` data-k="${q.kind==='room'?'room':'pw'}:${q.id}"`:''}>`+(interactive?`<polygon class="hit" points="${segQuad({...q,a:[q.a[0]-q.N[0]*ts*0.25,q.a[1]-q.N[1]*ts*0.25],b:[q.b[0]-q.N[0]*ts*0.25,q.b[1]-q.N[1]*ts*0.25],T:q.T+ts*0.5}).map(p=>R1(p[0])+','+R1(p[1])).join(' ')}"/>`:'')+`<polygon class="pwb ${q.mat}" points="${Q.map(p=>R1(p[0])+','+R1(p[1])).join(' ')}"/></g>`}
   (S.doors||[]).forEach((d,i)=>{s+=doorSVG(d,i,ts,interactive,interactive&&Sel.d===d.id?' sel':'')});
   // 기둥 축열
   if(L.axes){
@@ -938,6 +1020,12 @@ function drawingSVG({L,AN,LB,interactive,noTexts}){
     s+=g+'</g>';
   }
   if(!isDeckSheet())(S.decks||[]).forEach((d,i)=>s+=deckSVG(d,i,ts,interactive,false));
+  // 공간 이름표
+  for(const m of S.rooms||[]){const q=roomShape(m);if(q.length<3)continue;const b=bbox(q),cx=b.minX+b.w/2,cy=b.minY+b.h/2,ar=roomArea(m),K=ROOMK[m.kind]||ROOMK.etc,sel=interactive&&Sel.m===m.id;
+    const nm=m.name||'공간',sub=m.sub||`${K.n} · ${(PMAT[m.mat]||PMAT.ure)} ${fmt(+m.t||100)}T`,sz=`${fmt(m.w)} × ${fmt(m.h)} mm (${ar.toFixed(1)} ㎡ / ${pyeong(ar).toFixed(1)}평)`;
+    const f1=Math.min(ts*1.6,b.w/Math.max(4,textW(nm,1))*0.8,b.h*0.17),f2=Math.min(ts*0.62,f1*0.5,b.w/Math.max(8,textW(sz,1))*0.92,b.h*0.08);
+    s+=`<g class="rml${sel?' sel':''}"${interactive?` data-k="room:${m.id}"`:''}>`+(interactive?rc(cx-Math.max(textW(nm,f1),textW(sz,f2))/2-f2,cy-f1*1.1,Math.max(textW(nm,f1),textW(sz,f2))+f2*2,f1*1.1+f2*3.4,'hit'):'')
+      +txt(cx,cy-f1*0.35,nm,f1,'rmn','middle')+txt(cx,cy+f1*0.45,fit(sub,b.w*0.92,f2),f2,'rms','middle')+txt(cx,cy+f1*0.45+f2*1.35,fit(sz,b.w*0.92,f2),f2,'rms','middle')+'</g>'}
   // H빔
   for(const b of S.beams){
     const sel=interactive&&Sel.b===b.id;
@@ -949,6 +1037,7 @@ function drawingSVG({L,AN,LB,interactive,noTexts}){
   if(sh.dims){
     const N=normals(P),o0=S.wallT+ts*0.3;
     P.forEach((a,i)=>{const b=P[(i+1)%P.length],n=N[i],len=Math.hypot(b[0]-a[0],b[1]-a[1]);if(len<1)return;s+=dimSVG(dimG(a[0],a[1],b[0],b[1],n[0],n[1],S.wallT+ts*2.2,o0,ts),fmt(len),ts*0.66)});
+    for(const q of partSegs()){if(q.len<300)continue;const off=ts*0.9;s+=dimSVG(dimG(q.a[0],q.a[1],q.b[0],q.b[1],-q.N[0],-q.N[1],off,ts*0.15,ts),fmt(q.len),ts*0.5,'dim pwd')}
     s+=dimSVG(dimG(bb.minX,bb.minY,bb.maxX,bb.minY,0,-1,ts*4.6,ts*3.4,ts),fmt(bb.w),ts*0.72,'dim tot');
     s+=dimSVG(dimG(bb.minX,bb.maxY,bb.minX,bb.minY,-1,0,ts*4.6,ts*3.4,ts),fmt(bb.h),ts*0.72,'dim tot');
   }
@@ -961,12 +1050,13 @@ function stripSVG(L){
   const ts=L.ts,y=L.stripY,H=L.stripH,hh=ts*1.6,sp=S.spec;let s='',x=L.x+L.gap,w=L.legW;
   // 범례
   s+=rc(x,y,w,H,'tb')+ln(x,y+hh,x+w,y+hh,'tbl')+txt(x+ts*0.6,y+hh/2,'범례',ts*0.72,'tbh');
-  const rh=(H-hh-ts*2.4)/6,sx=x+ts*0.6,lx=x+ts*4.3,lw=w-ts*4.8,fs=ts*0.55,row=i=>y+hh+rh*(i+0.5);
+  const NL=partSegs().length?7:6,rh=(H-hh-ts*2.4)/NL,sx=x+ts*0.6,lx=x+ts*4.3,lw=w-ts*4.8,fs=ts*0.55,row=i=>y+hh+rh*(i+0.5);
   let cy=row(0);s+=rc(sx,cy-ts*0.38,ts*3,ts*0.76,'rk')+rc(sx,cy-ts*0.38,ts*0.14,ts*0.76,'fr')+rc(sx+ts*2.86,cy-ts*0.38,ts*0.14,ts*0.76,'fr')+txt(lx,cy,fit(`파레트랙 ${sp.W}×${sp.D}`,lw,fs),fs,'tbv');
   cy=row(1);s+=hbeamSVG(sx+ts*1.5,cy,ts*0.8)+txt(lx,cy,fit(`H빔 기둥 ${beamSizes()}`,lw,fs),fs,'tbv');
   cy=row(2);s+=rc(sx,cy-ts*0.3,ts*3,ts*0.6,'wallband')+rc(sx,cy-ts*0.3,ts*3,ts*0.6,'lgw')+txt(lx,cy,fit(`벽체 (두께 ${S.wallT})`,lw,fs),fs,'tbv');
   cy=row(3);s+=`<g class="dim">${ln(sx,cy,sx+ts*3,cy)}${ln(sx-ts*0.2,cy+ts*0.2,sx+ts*0.2,cy-ts*0.2,'tk')}${ln(sx+ts*2.8,cy+ts*0.2,sx+ts*3.2,cy-ts*0.2,'tk')}</g>`+txt(lx,cy,'치수선 (단위 mm)',fs,'tbv');
   cy=row(4);s+=`<g class="dim aisle">${ln(sx,cy,sx+ts*3,cy)}${ln(sx-ts*0.2,cy+ts*0.2,sx+ts*0.2,cy-ts*0.2,'tk')}${ln(sx+ts*2.8,cy+ts*0.2,sx+ts*3.2,cy-ts*0.2,'tk')}</g>`+txt(lx,cy,'통로 폭',fs,'tbv');
+  if(NL===7){cy=row(6);s+=`<polygon class="pwb ure" points="${R1(sx)},${R1(cy-ts*0.18)} ${R1(sx+ts*3)},${R1(cy-ts*0.18)} ${R1(sx+ts*3)},${R1(cy+ts*0.18)} ${R1(sx)},${R1(cy+ts*0.18)}"/>`+txt(lx,cy,fit(`가벽 · 공간 ${(S.rooms||[]).length}개`,lw,fs),fs,'tbv')}
   cy=row(5);s+=ln(sx,cy,sx+ts*2,cy,'axis')+`<circle class="bub" cx="${R1(sx+ts*2.5)}" cy="${R1(cy)}" r="${R1(ts*0.48)}"/>`+txt(sx+ts*2.5,cy,'X1',ts*0.34,'bubt','middle')+txt(lx,cy,'기둥 축열',fs,'tbv');
   // 축척 막대
   let lb=1000;for(const c of [1000,2000,5000,10000,20000,50000])if(c<=w-ts*2.4)lb=c;
@@ -981,6 +1071,7 @@ function stripSVG(L){
   rows.push(['프레임',gl.length===1?gl[0][0].split('|')[0].split('×').slice(1).join('×'):'규격 혼합',`${fmt(st.frames)}개`]);
   rows.push(['빔 (쌍 기준 ×2)',gl.length===1?`L=${gl[0][0].split('×')[0]}`:'규격 혼합',`${fmt(st.beams)}본`]);
   rows.push(['H빔 기둥',beamSizes(),`${fmt(S.beams.length)}개`]);
+  {const pt=partTotals();if(pt.len){const ks=[...pt.by.keys()];rows.push(['가벽 패널',ks.length===1?ks[0]:'규격 혼합',`${(pt.len/1000).toFixed(1)}m`])}if((S.rooms||[]).length)rows.push(['공간',(S.rooms||[]).map(m=>m.name||'공간').join(', '),`${(S.rooms||[]).reduce((a,m)=>a+roomArea(m),0).toFixed(1)}㎡`])}
   if((S.decks||[]).length)rows.push(['데크',`t=${[...new Set(S.decks.map(d=>fmt(d.t)))].join('/')} · EL+${[...new Set(S.decks.map(d=>fmt(d.z)))].join('/')}`,`${(S.decks.reduce((a,d)=>a+d.w*d.h,0)/1e6).toFixed(1)}㎡`]);
   if((S.doors||[]).length)rows.push(['출입구',[...new Set(S.doors.map(d=>`${fmt(d.w)}×${fmt(d.h)}`))].join(', '),`${fmt(S.doors.length)}개`]);
   rows.push(['적재 위치',`팔레트${S.spec.floor?' · 바닥 포함':''}`,`${fmt(st.pos)}`]);
@@ -1002,9 +1093,15 @@ function stripSVG(L){
 /* ---------------- 오버레이 ---------------- */
 function overlaySVG(){
   if(!LY)return '';const ts=LY.ts,px=1/V.s;let s='';
+  if(ghost&&ghost.t==='pt'){s+=`<g class="meas"><circle cx="${R1(ghost.p[0])}" cy="${R1(ghost.p[1])}" r="${R1(4*px)}"/></g>`}
+  else if(ghost&&ghost.t==='nroom'){const r=ghost.r,ar=(r.w*r.h)/1e6;s+=rc(r.x,r.y,r.w,r.h,'ghost')+txt(r.x+r.w/2,r.y+r.h/2,`공간 ${fmt(r.w)} × ${fmt(r.h)} · ${ar.toFixed(1)}㎡ (${pyeong(ar).toFixed(1)}평)`,13*px,'gt','middle')+gapSVG(r,new Set(),null)}
+  else if(ghost&&ghost.t==='npw'){const a=ghost.a,b=ghost.b,L=Math.hypot(b[0]-a[0],b[1]-a[1]),an=Math.round(Math.atan2(-(b[1]-a[1]),b[0]-a[0])*180/Math.PI);s+=ln(a[0],a[1],b[0],b[1],'pwgh')+`<g class="meas"><circle cx="${R1(a[0])}" cy="${R1(a[1])}" r="${R1(4*px)}"/><circle cx="${R1(b[0])}" cy="${R1(b[1])}" r="${R1(4*px)}"/></g>`+txt((a[0]+b[0])/2+10*px,(a[1]+b[1])/2-12*px,`가벽 ${fmt(L)} mm${an%90?` · ${an}°`:''}`,13*px,'mt')}
+  if(Sel.m&&['select','room'].includes(tool)){const m=roomById(Sel.m);if(m){const hs=7*px,H=(x,y,k,c)=>`<g data-k="rh:${k}"><rect class="rhd ${c}" x="${R1(x-hs)}" y="${R1(y-hs)}" width="${R1(hs*2)}" height="${R1(hs*2)}"/></g>`;
+    s+=rc(m.x,m.y,m.w,m.h,'rmsel')+gapSVG(roomBox(m),new Set([m.id]),null)+H(m.x+m.w/2,m.y,'T','h')+H(m.x+m.w/2,m.y+m.h,'B','h')+H(m.x,m.y+m.h/2,'L','v')+H(m.x+m.w,m.y+m.h/2,'R','v')}}
+  if(Sel.w&&['select','pwall'].includes(tool)){const p=pwById(Sel.w);if(p){const r=8*px,L=Math.hypot(p.b[0]-p.a[0],p.b[1]-p.a[1]);s+=[p.a,p.b].map((q,i)=>`<g data-k="pe:${i}"><circle class="rhd" cx="${R1(q[0])}" cy="${R1(q[1])}" r="${R1(r)}"/></g>`).join('')+txt((p.a[0]+p.b[0])/2+10*px,(p.a[1]+p.b[1])/2-12*px,`${fmt(L)} mm`,12*px,'mt')}}
   if(ghost&&ghost.t==='ndeck'){const r=ghost.r;s+=rc(r.x,r.y,r.w,r.h,'ghost')+txt(r.x+r.w/2,r.y+r.h/2,`데크 ${fmt(r.w)}×${fmt(r.h)}`,13*px,'gt','middle')}
   else if(ghost&&ghost.t==='door'){s+=doorSVG(ghost.d,(S.doors||[]).length,ts,false,' ghostd');const g=doorGeo(ghost.d);s+=doorGapSVG(g,px)}
-  else if(ghost){if(ghost.t==='rack'){const f=ghost.f;s+=rc(f.x,f.y,f.w,f.h,'ghost'+(ghost.bad?' bad':''));s+=txt(f.x+f.w/2,f.y+f.h/2,`${ghost.rot?'세로':'가로'} ${S.spec.W}×${S.spec.D}`,Math.min(ts*0.5,f.w*0.14),'gt','middle')}else{s+=hbeamSVG(ghost.x,ghost.y,+S.beamW,+S.beamH,'ghostb'+(ghost.bad?' bad':''))+txt(ghost.x+S.beamW/2+8/V.s,ghost.y-S.beamH/2-10/V.s,`${fmt(S.beamW)}×${fmt(S.beamH)}`,12/V.s,'hbl')}}
+  else if(ghost&&(ghost.t==='rack'||ghost.t==='beam')){if(ghost.t==='rack'){const f=ghost.f;s+=rc(f.x,f.y,f.w,f.h,'ghost'+(ghost.bad?' bad':''));s+=txt(f.x+f.w/2,f.y+f.h/2,`${ghost.rot?'세로':'가로'} ${S.spec.W}×${S.spec.D}`,Math.min(ts*0.5,f.w*0.14),'gt','middle')}else{s+=hbeamSVG(ghost.x,ghost.y,+S.beamW,+S.beamH,'ghostb'+(ghost.bad?' bad':''))+txt(ghost.x+S.beamW/2+8/V.s,ghost.y-S.beamH/2-10/V.s,`${fmt(S.beamW)}×${fmt(S.beamH)}`,12/V.s,'hbl')}}
   if(meas&&meas.a){const b=meas.b||meas.h;s+=`<g class="meas"><circle cx="${R1(meas.a[0])}" cy="${R1(meas.a[1])}" r="${R1(4*px)}"/>`;if(b){const d=Math.hypot(b[0]-meas.a[0],b[1]-meas.a[1]);s+=ln(meas.a[0],meas.a[1],b[0],b[1])+`<circle cx="${R1(b[0])}" cy="${R1(b[1])}" r="${R1(4*px)}"/>`+txt((meas.a[0]+b[0])/2+10*px,(meas.a[1]+b[1])/2-12*px,`${fmt(d)} mm`,13*px,'mt')}s+='</g>'}
   if(marquee){const r=normRect(marquee.a,marquee.b);s+=rc(r.x,r.y,r.w,r.h,'mq')}
   if(tool==='wall'){const P=S.poly;P.forEach((v,i)=>{const n=P[(i+1)%P.length];if(Sel.e===i)s+=ln(v[0],v[1],n[0],n[1],'esel');s+=`<g data-k="edge:${i}">${ln(v[0],v[1],n[0],n[1],'eh')}</g>`});P.forEach((v,i)=>{const n=P[(i+1)%P.length];const mx=(v[0]+n[0])/2,my=(v[1]+n[1])/2,m=6*px;s+=`<g data-k="mid:${i}"><rect class="mh" x="${R1(mx-m)}" y="${R1(my-m)}" width="${R1(2*m)}" height="${R1(2*m)}"/>${ln(mx-m*0.6,my,mx+m*0.6,my,'mhp')}${ln(mx,my-m*0.6,mx,my+m*0.6,'mhp')}</g>`});
@@ -1082,6 +1179,12 @@ text{font-family:var(--sans)}
 .ebg{fill:var(--floor)}.erbg,.ebmbg{fill:var(--paper)}.eup{fill:var(--steel)}.ebeam{fill:var(--accent)}.epl{fill:var(--pallet)}.ebx{fill:var(--rackfill);stroke:var(--pallet);stroke-width:.7px}.ebr{fill:none;stroke:var(--steel);stroke-width:.9px}
 .ebm{fill:var(--grid2);stroke:var(--hbeam);stroke-width:1.1px}.edk{fill:url(#edh);stroke:var(--deck);stroke-width:1.6px}.edhl{stroke:var(--deck);stroke-width:.7px}.erail{stroke:var(--deck);stroke-width:1px}.edkl{fill:var(--deck);font-weight:600}
 .ewall{fill:url(#eh);stroke:var(--wall);stroke-width:1.2px}.egr{fill:url(#eh);stroke:none}.efl{stroke:var(--wall);stroke-width:2.4px}.eceil{stroke:var(--muted);stroke-width:1px;stroke-dasharray:10 5}
+.rmf{stroke:none;pointer-events:none}.rmf.cool{fill:#4dabf7;fill-opacity:.13}.rmf.freeze{fill:#7950f2;fill-opacity:.13}.rmf.dry{fill:#f59f00;fill-opacity:.12}.rmf.office{fill:#40c057;fill-opacity:.12}.rmf.etc{fill:#868e96;fill-opacity:.1}
+.pwb{fill:url(#pwh);stroke:var(--wall);stroke-width:1.3px}.pwb.gyp{fill:var(--grid2)}.pwb.mesh{fill:none;stroke-dasharray:6 3}.pwh1{stroke:var(--steel);stroke-width:.7px;stroke-opacity:.6}.pwg{cursor:move}.pwg.sel .pwb{stroke:var(--accent);stroke-width:2.6px}
+.rmn{fill:var(--ink);font-weight:700}.rms{fill:var(--muted)}.rml{cursor:move}.rml.sel .rmn{fill:var(--accent)}.pwd line{stroke:var(--steel)}.pwd text{fill:var(--steel)}
+.rmsel{fill:none;stroke:var(--accent);stroke-width:1.6px;stroke-dasharray:8 5;pointer-events:none}.rhd{fill:var(--paper);stroke:var(--accent);stroke-width:2px;cursor:pointer}.rhd.h{cursor:ns-resize}.rhd.v{cursor:ew-resize}
+.pwgh{stroke:var(--accent);stroke-width:2px;stroke-dasharray:7 4}.lvd text{paint-order:stroke;stroke:var(--paper);stroke-width:3px}
+.epw{fill:#e7edf3;stroke:var(--wall);stroke-width:1px}.epw.side{fill:#d5dde6}.epwl{fill:var(--steel);font-weight:700}
 .edr{fill:var(--paper);stroke:var(--accent);stroke-width:1.4px}.edn{fill:none;stroke:var(--accent);stroke-width:1.2px;stroke-dasharray:8 5}.edl{fill:none;stroke:var(--accent);stroke-width:.9px;stroke-dasharray:6 4}.edt{fill:var(--accent);font-weight:600}
 .ghostorig{fill:none;stroke:var(--muted);stroke-width:1.4px;stroke-dasharray:6 4}
 .rdim line{stroke:var(--accent);stroke-width:1.2px}.rdim text{fill:var(--accent);font-family:var(--mono);font-weight:700;paint-order:stroke;stroke:var(--paper);stroke-width:3px;stroke-linejoin:round;text-anchor:middle;dominant-baseline:central}
@@ -1144,13 +1247,35 @@ function snapRect(f,ex,raw,st){
     for(const w of new Set([o.wall,+o.wallFit||0])){
     if(Math.abs(a[0]-b[0])<1){tx(a[0]+w);tx(a[0]-w-f.w)}
     if(Math.abs(a[1]-b[1])<1){ty(a[1]+w);ty(a[1]-w-f.h)}}}
+  for(const q of partSegs()){if(q.ax==='d')continue;const Q=segQuad(q),xs=[...new Set(Q.map(p=>Math.round(p[0])))],ys=[...new Set(Q.map(p=>Math.round(p[1])))];for(const w of new Set([o.wall,+o.wallFit||0])){for(const x of xs){tx(x+w);tx(x-w-f.w)}for(const y of ys){ty(y+w);ty(y-w-f.h)}}}
   if(isDeckSheet())for(const dk of S.decks||[])for(const w of new Set([o.wall,+o.wallFit||0])){tx(dk.x+w);tx(dk.x+dk.w-w-f.w);ty(dk.y+w);ty(dk.y+dk.h-w-f.h)}
   return[X??(raw?f.x:snapG(f.x)),Y??(raw?f.y:snapG(f.y))];
 }
-function checkRect(f,rot){if(rot==null)rot=f.h>f.w?1:0;if(!rectIn(f,S.poly))return 'err';if(isDeckSheet()&&!(S.decks||[]).some(d=>f.x>=d.x-0.5&&f.y>=d.y-0.5&&f.x+f.w<=d.x+d.w+0.5&&f.y+f.h<=d.y+d.h+0.5))return 'err';for(const r of S.racks)if(ov(f,fp(r),-1)&&!((r.rot?1:0)===rot&&shareOv(f,fp(r),rot,Math.max(rUW(r),+S.spec.uw||100))))return 'err';for(const b of S.beams)if(ov(f,beamRect(b),-1))return 'err';return 'ok'}
+function checkRect(f,rot){if(rot==null)rot=f.h>f.w?1:0;if(!rectIn(f,S.poly))return 'err';if(isDeckSheet()&&!(S.decks||[]).some(d=>f.x>=d.x-0.5&&f.y>=d.y-0.5&&f.x+f.w<=d.x+d.w+0.5&&f.y+f.h<=d.y+d.h+0.5))return 'err';for(const r of S.racks)if(ov(f,fp(r),-1)&&!((r.rot?1:0)===rot&&shareOv(f,fp(r),rot,Math.max(rUW(r),+S.spec.uw||100))))return 'err';for(const b of S.beams)if(ov(f,beamRect(b),-1))return 'err';if(partHit(f))return 'err';return 'ok'}
 function ghostRack(w){const sp=S.spec,fw=ghostRot?sp.D:sp.W,fh=ghostRot?sp.W:sp.D,f={x:w[0]-fw/2,y:w[1]-fh/2,w:fw,h:fh};[f.x,f.y]=snapRect(f,null);return{t:'rack',f,rot:ghostRot,bad:checkRect(f,ghostRot)==='err'}}
 function ghostBeam(w){const x=snapG(w[0]),y=snapG(w[1]),bw=+S.beamW,bh=+S.beamH,r={x:x-bw/2,y:y-bh/2,w:bw,h:bh};const bad=S.racks.some(q=>ov(r,fp(q),-1))||S.beams.some(b=>ov(r,beamRect(b),-1));return{t:'beam',x,y,bad}}
 
+
+/* ---------------- 공간 · 가벽 조작 ---------------- */
+let ROOMA=null,PWD=null;
+function snapPt(w,ex){if(MODK.alt)return[Math.round(w[0]),Math.round(w[1])];const th=12/V.s;let X=null,Y=null,bx=th,by=th;const tx=c=>{const d=Math.abs(c-w[0]);if(d<bx){bx=d;X=c}},ty=c=>{const d=Math.abs(c-w[1]);if(d<by){by=d;Y=c}};
+  for(const v of S.poly){tx(v[0]);ty(v[1])}for(const m of S.rooms||[]){if(m.id===ex)continue;tx(m.x);tx(m.x+m.w);ty(m.y);ty(m.y+m.h)}
+  for(const q of partSegs()){if(q.id===ex)continue;for(const P of segQuad(q)){tx(P[0]);ty(P[1])}}for(const p of S.pwalls||[]){if(p.id===ex)continue;for(const q of [p.a,p.b]){tx(q[0]);ty(q[1])}}
+  return[Math.round(X??snapG(w[0])),Math.round(Y??snapG(w[1]))]}
+function pwEnd(a,w,ex){const b=snapPt(w,ex);if(MODK.alt)return b;const dx=b[0]-a[0],dy=b[1]-a[1],k=Math.tan(8*Math.PI/180);if(Math.abs(dy)<=Math.abs(dx)*k)b[1]=a[1];else if(Math.abs(dx)<=Math.abs(dy)*k)b[0]=a[0];return b}
+function snapRoomRect(f,ex){if(MODK.alt)return[f.x,f.y];const th=12/V.s;let X=null,Y=null,bx=th,by=th;const tx=c=>{const d=Math.abs(c-f.x);if(d<bx){bx=d;X=c}},ty=c=>{const d=Math.abs(c-f.y);if(d<by){by=d;Y=c}};
+  const xs=S.poly.map(v=>v[0]),ys=S.poly.map(v=>v[1]);for(const m of S.rooms||[])if(m.id!==ex){xs.push(m.x,m.x+m.w);ys.push(m.y,m.y+m.h)}
+  for(const x of xs){tx(x);tx(x-f.w)}for(const y of ys){ty(y);ty(y-f.h)}return[X??f.x,Y??f.y]}
+const pwDoors=w=>(S.doors||[]).filter(d=>d.host==='p:'+w.id);
+function moveRoom(m,dx,dy){m.x=Math.round(m.x+dx);m.y=Math.round(m.y+dy);roomDoors(m).forEach(d=>{d.x+=dx;d.y+=dy})}
+function movePw(w,dx,dy){w.a=[Math.round(w.a[0]+dx),Math.round(w.a[1]+dy)];w.b=[Math.round(w.b[0]+dx),Math.round(w.b[1]+dy)];pwDoors(w).forEach(d=>{d.x+=dx;d.y+=dy})}
+function newRoom(r){const D=S.roomDef,bb=bbox(S.poly);let x0=Math.max(r.x,bb.minX),y0=Math.max(r.y,bb.minY),x1=Math.min(r.x+r.w,bb.maxX),y1=Math.min(r.y+r.h,bb.maxY);
+  if(x1-x0<600||y1-y0<600){toast('공간은 가로·세로 600mm 이상으로 그려 주세요.');return null}
+  S.rooms=S.rooms||[];const cold=D.kind==='cool'||D.kind==='freeze',n=S.rooms.filter(m=>(m.kind==='cool'||m.kind==='freeze')===cold).length+1;
+  const m={id:uid(),name:cold?`워크인 ${n}`:`공간 ${S.rooms.length+1}`,sub:'',kind:D.kind,mat:D.mat,t:+D.t||100,h3:+D.h3||3000,x:Math.round(x0),y:Math.round(y0),w:Math.round(x1-x0),h:Math.round(y1-y0),auto:false};
+  S.rooms.push(m);Sel.r.clear();Sel.b=null;Sel.d=null;Sel.m=m.id;Sel.w=null;commit();render();renderSel();
+  const ns=partSegs().filter(q=>q.id===m.id).length;toast(`${m.name}을(를) 만들었습니다 · 가벽 ${ns}면 (창고 벽에 붙은 면은 생략) · 출입구 도구(D)로 방열문을 다세요.`);return m}
+function roomBox(m){return{x:m.x,y:m.y,w:m.w,h:m.h}}
 /* ---------------- 포인터 (2D) ---------------- */
 let drag=null;const ptrs=new Map();
 svg.addEventListener('pointerdown',e=>{
@@ -1160,13 +1285,20 @@ svg.addEventListener('pointerdown',e=>{
   const w=toW(e.clientX,e.clientY),hit=e.target.closest&&e.target.closest('[data-k]'),[kt,kid]=(hit?hit.dataset.k:'').split(':');
   const pan={type:'pan',sx:e.clientX,sy:e.clientY,vx:V.x,vy:V.y,click:true};
   if(e.button===1||e.button===2||spaceDown){drag={...pan,click:false};$('#cv').classList.add('panning');return}
+  if(['select','room','pwall'].includes(tool)&&!(tool==='pwall'&&PWD)){
+    if(kt==='rh'&&Sel.m){const m=roomById(Sel.m);if(m){drag={type:'rroom',side:kid,o:roomBox(m),moved:false};return}}
+    if(kt==='pe'&&Sel.w){const p=pwById(Sel.w);if(p){drag={type:'ppe',i:+kid,moved:false};return}}
+    if(kt==='room'&&tool!=='pwall'){Sel.r.clear();Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.w=null;Sel.v=null;Sel.m=kid;const m=roomById(kid);drag={type:'mroom',o:roomBox(m),doors:roomDoors(m).map(d=>[d,d.x,d.y]),moved:false};renderSel();render();return}
+    if(kt==='pw'&&tool!=='room'){Sel.r.clear();Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.m=null;Sel.v=null;Sel.w=kid;const p=pwById(kid);drag={type:'mpw',o:{a:[...p.a],b:[...p.b]},doors:pwDoors(p).map(d=>[d,d.x,d.y]),moved:false};renderSel();render();return}
+  }
+  if(tool==='room'){if(e.button!==0){drag=pan;return}const p0=snapPt(w);if(ROOMA){drag={type:'nroom',a:ROOMA,b:p0,second:true}}else drag={type:'nroom',a:p0,b:p0};if(Sel.m){Sel.m=null;renderSel();render()}return}
   if(tool==='select'){
     if(kt==='rack'){
-      if(e.shiftKey){Sel.r.has(kid)?Sel.r.delete(kid):Sel.r.add(kid);Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.v=null;renderSel();render();drag=null;return}
-      if(!Sel.r.has(kid))Sel.r=new Set([kid]);Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.v=null;
+      if(e.shiftKey){Sel.r.has(kid)?Sel.r.delete(kid):Sel.r.add(kid);Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.m=null;Sel.w=null;Sel.v=null;renderSel();render();drag=null;return}
+      if(!Sel.r.has(kid))Sel.r=new Set([kid]);Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.m=null;Sel.w=null;Sel.v=null;
       const orig=new Map();S.racks.forEach(r=>{if(Sel.r.has(r.id))orig.set(r.id,{x:r.x,y:r.y})});
       drag={type:'move',w0:w,orig,grab:kid,moved:false};renderSel();render();return}
-    if(kt==='deck'){Sel.r.clear();Sel.b=null;Sel.d=null;Sel.t=null;Sel.v=null;Sel.k=kid;const dk=deckById(kid);drag={type:'mdeck',w0:w,o:{x:dk.x,y:dk.y},moved:false};renderSel();render();return}
+    if(kt==='deck'){Sel.r.clear();Sel.b=null;Sel.d=null;Sel.t=null;Sel.m=null;Sel.w=null;Sel.v=null;Sel.k=kid;const dk=deckById(kid);drag={type:'mdeck',w0:w,o:{x:dk.x,y:dk.y},moved:false};renderSel();render();return}
     if(kt==='text'){Sel.r.clear();Sel.b=null;Sel.d=null;Sel.k=null;Sel.v=null;Sel.t=kid;const t=textById(kid);drag={type:'mtext',w0:w,o:{x:t.x,y:t.y},moved:false};renderSel();render();return}
     if(kt==='door'){Sel.r.clear();Sel.b=null;Sel.v=null;Sel.d=kid;const d=doorById(kid);drag={type:'mdoor',moved:false,w0:w};renderSel();render();return}
     if(kt==='beam'){Sel.r.clear();Sel.v=null;Sel.d=null;Sel.b=kid;const b=beamById(kid);drag={type:'mbeam',w0:w,o:{x:b.x,y:b.y},moved:false};renderSel();render();return}
@@ -1195,9 +1327,18 @@ function onPlanMove(e){
     const g=rackById(drag.grab),o=drag.orig.get(drag.grab);if(!g)return;const st=dragStep(),f=fp({...g,x:o.x+Math.round(dx/st)*st,y:o.y+Math.round(dy/st)*st});const[sx,sy]=snapRect(f,Sel.r,true,st);const ddx=sx-o.x+(drag.fine?drag.fine[0]:0),ddy=sy-o.y+(drag.fine?drag.fine[1]:0);drag.info={st,dx:ddx,dy:ddy,id:drag.grab};
     S.racks.forEach(r=>{const q=drag.orig.get(r.id);if(q){r.x=q.x+ddx;r.y=q.y+ddy}});render();return}
   if(drag.type==='mpend'){const dx=(e.clientX-drag.c0[0])/V.s,dy=(e.clientY-drag.c0[1])/V.s;if(!drag.moved&&!drag.fine&&Math.hypot(dx,dy)*V.s<4)return;drag.moved=true;const st=dragStep(),f=fp({...pend,x:drag.o.x+Math.round(dx/st)*st,y:drag.o.y+Math.round(dy/st)*st});[pend.x,pend.y]=snapRect(f,null,true,st);pend.x+=(drag.fine?drag.fine[0]:0);pend.y+=(drag.fine?drag.fine[1]:0);drag.info={st,dx:pend.x-drag.o.x,dy:pend.y-drag.o.y,id:'pend'};renderOv();renderGapRow();renderWf();return}
+  if(drag.type==='nroom'){drag.b=snapPt(w);ghost={t:'nroom',r:normRect(drag.a,drag.b)};renderOv();return}
+  if(drag.type==='mroom'||drag.type==='mpw'){const dx=(e.clientX-drag.c0[0])/V.s,dy=(e.clientY-drag.c0[1])/V.s;if(!drag.moved&&!drag.fine&&Math.hypot(dx,dy)*V.s<4)return;drag.moved=true;const st=dragStep(),F=drag.fine||[0,0];
+    if(drag.type==='mroom'){const m=roomById(Sel.m);if(!m)return;const o=drag.o;let[nx,ny]=snapRoomRect({x:o.x+Math.round(dx/st)*st,y:o.y+Math.round(dy/st)*st,w:o.w,h:o.h},m.id);nx+=F[0];ny+=F[1];m.x=Math.round(nx);m.y=Math.round(ny);drag.doors.forEach(([d,x,y])=>{d.x=x+m.x-o.x;d.y=y+m.y-o.y})}
+    else{const p=pwById(Sel.w);if(!p)return;const o=drag.o;let ddx=Math.round(dx/st)*st,ddy=Math.round(dy/st)*st;const sa=snapPt([o.a[0]+ddx,o.a[1]+ddy],p.id);if(!MODK.alt&&Math.abs(sa[0]-o.a[0]-ddx)<14/V.s)ddx=sa[0]-o.a[0];if(!MODK.alt&&Math.abs(sa[1]-o.a[1]-ddy)<14/V.s)ddy=sa[1]-o.a[1];ddx+=F[0];ddy+=F[1];p.a=[o.a[0]+ddx,o.a[1]+ddy];p.b=[o.b[0]+ddx,o.b[1]+ddy];drag.doors.forEach(([d,x,y])=>{d.x=x+ddx;d.y=y+ddy})}
+    render();renderSel();return}
+  if(drag.type==='rroom'){const m=roomById(Sel.m);if(!m)return;drag.moved=true;const o=drag.o,q=snapPt(w,m.id),MIN=600;
+    if(drag.side==='L'){const x1=o.x+o.w,x=Math.min(q[0],x1-MIN);m.x=x;m.w=x1-x}else if(drag.side==='R'){m.x=o.x;m.w=Math.max(MIN,q[0]-o.x)}else if(drag.side==='T'){const y1=o.y+o.h,y=Math.min(q[1],y1-MIN);m.y=y;m.h=y1-y}else{m.y=o.y;m.h=Math.max(MIN,q[1]-o.y)}
+    render();renderSel();return}
+  if(drag.type==='ppe'){const p=pwById(Sel.w);if(!p)return;drag.moved=true;const other=drag.i?p.a:p.b,nb=pwEnd(other,w,p.id);if(drag.i)p.b=nb;else p.a=nb;render();renderSel();return}
   if(drag.type==='ndeck'){drag.b=[snapG(w[0]),snapG(w[1])];ghost={t:'ndeck',r:normRect(drag.a,drag.b)};renderOv();return}
   if(drag.type==='mdeck'||drag.type==='mtext'){const dx=(e.clientX-drag.c0[0])/V.s,dy=(e.clientY-drag.c0[1])/V.s;if(!drag.moved&&!drag.fine&&Math.hypot(dx,dy)*V.s<4)return;drag.moved=true;const o=drag.type==='mdeck'?deckById(Sel.k):textById(Sel.t);if(o){const st=dragStep();o.x=drag.o.x+Math.round(dx/st)*st+(drag.fine?drag.fine[0]:0);o.y=drag.o.y+Math.round(dy/st)*st+(drag.fine?drag.fine[1]:0);drag.info={st,dx:o.x-drag.o.x,dy:o.y-drag.o.y,kind:'text'};render();renderSel()}return}
-  if(drag.type==='mdoor'){if(!drag.moved&&Math.hypot(w[0]-drag.w0[0],w[1]-drag.w0[1])*V.s<4)return;drag.moved=true;const d=doorById(Sel.d);if(d){d.x=w[0];d.y=w[1];doorFix(d,true);render();renderSel()}return}
+  if(drag.type==='mdoor'){if(!drag.moved&&Math.hypot(w[0]-drag.w0[0],w[1]-drag.w0[1])*V.s<4)return;drag.moved=true;const d=doorById(Sel.d);if(d){d.x=w[0];d.y=w[1];doorFix(d,true,true);render();renderSel()}return}
   if(drag.type==='mbeam'){const dx=(e.clientX-drag.c0[0])/V.s,dy=(e.clientY-drag.c0[1])/V.s;if(!drag.moved&&!drag.fine&&Math.hypot(dx,dy)*V.s<4)return;drag.moved=true;const b=beamById(Sel.b);if(b){const st=dragStep();b.x=drag.o.x+Math.round(dx/st)*st+(drag.fine?drag.fine[0]:0);b.y=drag.o.y+Math.round(dy/st)*st+(drag.fine?drag.fine[1]:0);drag.info={st,dx:b.x-drag.o.x,dy:b.y-drag.o.y,kind:'beam'};render();renderSel()}return}
   if(drag.type==='vtx'){S.poly[drag.i]=[snapG(w[0]),snapG(w[1])];drag.moved=true;render();renderVerts();return}
   if(drag.type==='box'){marquee.b=w;renderOv()}
@@ -1207,12 +1348,14 @@ function endPtr(e){
   ptrs.delete(e.pointerId);$('#cv').classList.remove('panning');if(!drag)return;
   if(drag.type==='pinch'){if(ptrs.size===0)drag=null;return}
   const d=drag;drag=null;const w=toW(e.clientX,e.clientY);
+  if(d.type==='nroom'){ghost=null;const r=normRect(d.a,d.b);if(e.type!=='pointerup'){renderOv();return}
+    if(r.w>=600&&r.h>=600){ROOMA=null;newRoom(r)}else if(!d.second){ROOMA=d.a;ghost={t:'pt',p:d.a};renderOv();toast('반대쪽 모서리를 누르세요 (끌어서 그려도 됩니다 · Esc 취소)')}else{ROOMA=null;renderOv();toast('공간은 가로·세로 600mm 이상이어야 합니다.')}return}
   if(d.type==='ndeck'){ghost=null;const r=normRect(d.a,d.b);if(e.type==='pointerup'&&r.w>=500&&r.h>=500){const dk={id:uid(),x:r.x,y:r.y,w:r.w,h:r.h,z:+S.deckZ||3000,t:+S.deckT||100};S.decks=S.decks||[];S.decks.push(dk);Sel.k=dk.id;commit();render();renderSel();toast(`데크${S.decks.length}을(를) 그렸습니다. 위쪽 줄에서 상면 높이·두께를 확인하세요.`)}else{renderOv();if(e.type==='pointerup')toast('끌어서 데크 영역을 그리세요 (가로·세로 500mm 이상).')}return}
   if(d.type==='pan'&&d.click&&e.type==='pointerup')click(w,d);
   else if(d.type==='mtext'&&!d.moved&&Sel.t)openTBox('plan',Sel.t);
-  else if(['move','mbeam','vtx','mdoor','mdeck','mtext'].includes(d.type)&&d.moved){commit();render();renderSel()}
-  else if(d.type==='box'&&marquee&&Math.hypot(e.clientX-d.a0[0],e.clientY-d.a0[1])<5){marquee=null;if(!e.shiftKey&&(Sel.r.size||Sel.b||Sel.d||Sel.k||Sel.t)){Sel.r.clear();Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.v=null;renderSel();render()}}
-  else if(d.type==='box'&&marquee){if(!e.shiftKey)Sel.r.clear();const r=normRect(marquee.a,marquee.b);S.racks.forEach(q=>{if(ov(fp(q),r,0))Sel.r.add(q.id)});marquee=null;Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;renderSel();render()}
+  else if(['move','mbeam','vtx','mdoor','mdeck','mtext','mroom','mpw','rroom','ppe'].includes(d.type)&&d.moved){commit();render();renderSel()}
+  else if(d.type==='box'&&marquee&&Math.hypot(e.clientX-d.a0[0],e.clientY-d.a0[1])<5){marquee=null;if(!e.shiftKey&&(Sel.r.size||Sel.b||Sel.d||Sel.k||Sel.t||Sel.m||Sel.w)){Sel.r.clear();Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.m=null;Sel.w=null;Sel.v=null;renderSel();render()}}
+  else if(d.type==='box'&&marquee){if(!e.shiftKey)Sel.r.clear();const r=normRect(marquee.a,marquee.b);S.racks.forEach(q=>{if(ov(fp(q),r,0))Sel.r.add(q.id)});marquee=null;Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.m=null;Sel.w=null;renderSel();render()}
 }
 svg.addEventListener('pointerup',e=>{endPtr(e);renderOv()});svg.addEventListener('pointercancel',endPtr);
 svg.addEventListener('pointerleave',()=>{if(!drag&&ghost){ghost=null;renderOv()}});
@@ -1225,32 +1368,37 @@ function fineMsg(ax,tot){const t=$('#hintTxt');if(!t.classList.contains('fine'))
 let wCommitT=0;
 svg.addEventListener('wheel',e=>{e.preventDefault();
   if(e.shiftKey){const k=wheelSteps(e,WACC);if(!k)return;
-    if(drag&&['move','mpend','mbeam','mtext','mdeck'].includes(drag.type)){let isR=false,rot=0;if(drag.type==='move'){const g=rackById(drag.grab);isR=!!g;rot=g&&g.rot?1:0}else if(drag.type==='mpend'&&pend){isR=true;rot=pend.rot?1:0}
+    if(drag&&['move','mpend','mbeam','mtext','mdeck','mroom','mpw'].includes(drag.type)){let isR=false,rot=0;if(drag.type==='move'){const g=rackById(drag.grab);isR=!!g;rot=g&&g.rot?1:0}else if(drag.type==='mpend'&&pend){isR=true;rot=pend.rot?1:0}
       const ax=fineAxis(e,isR,rot),v=ax==='x'?10*k:-10*k;drag.fine=drag.fine||[0,0];drag.fine[ax==='x'?0:1]+=v;drag.moved=true;const c=drag.lastC||lastDownC||[e.clientX,e.clientY];onPlanMove({clientX:c[0],clientY:c[1],pointerId:-1});renderOv();fineMsg(ax,drag.fine[ax==='x'?0:1]);return}
-    if(!drag){let isR=false,rot=0;if(pend&&tool==='rack'){isR=true;rot=pend.rot?1:0}else if(Sel.r.size){isR=true;const r0=rackById([...Sel.r][0]);rot=r0&&r0.rot?1:0}else if(!(Sel.b||Sel.t||Sel.k))return;
+    if(!drag){let isR=false,rot=0;if(pend&&tool==='rack'){isR=true;rot=pend.rot?1:0}else if(Sel.r.size){isR=true;const r0=rackById([...Sel.r][0]);rot=r0&&r0.rot?1:0}else if(!(Sel.b||Sel.t||Sel.k||Sel.m||Sel.w))return;
       const ax=fineAxis(e,isR,rot),v=ax==='x'?10*k:-10*k,dx=ax==='x'?v:0,dy=ax==='x'?0:v;
       if(pend&&tool==='rack'){pend.x+=dx;pend.y+=dy;renderOv();renderSel();fineMsg(ax,v);return}
-      if(Sel.r.size)S.racks.forEach(r=>{if(Sel.r.has(r.id)){r.x+=dx;r.y+=dy}});else if(Sel.b){const b=beamById(Sel.b);b.x+=dx;b.y+=dy}else if(Sel.t){const t=textById(Sel.t);t.x+=dx;t.y+=dy}else if(Sel.k){const kk=deckById(Sel.k);kk.x+=dx;kk.y+=dy}
+      if(Sel.r.size)S.racks.forEach(r=>{if(Sel.r.has(r.id)){r.x+=dx;r.y+=dy}});else if(Sel.b){const b=beamById(Sel.b);b.x+=dx;b.y+=dy}else if(Sel.t){const t=textById(Sel.t);t.x+=dx;t.y+=dy}else if(Sel.k){const kk=deckById(Sel.k);kk.x+=dx;kk.y+=dy}else if(Sel.m)moveRoom(roomById(Sel.m),dx,dy);else if(Sel.w)movePw(pwById(Sel.w),dx,dy)
       render();renderSel();renderOv();WFT.tot=(WFT.ax===ax&&Date.now()-WFT.t<2500?WFT.tot:0)+v;WFT.ax=ax;WFT.t=Date.now();fineMsg(ax,WFT.tot);clearTimeout(wCommitT);wCommitT=setTimeout(()=>{commit();render();renderSel()},450);return}
     return}
   zoomAt(e.clientX,e.clientY,Math.exp(-e.deltaY*0.0015))},{passive:false});
 const WFT={ax:'',t:0,tot:0};
 let rDown=null,lastDownC=null;svg.addEventListener('pointerdown',e=>{lastDownC=[e.clientX,e.clientY];if(e.button===2)rDown=[e.clientX,e.clientY]},true);
-svg.addEventListener('contextmenu',e=>{e.preventDefault();if(rDown&&Math.hypot(e.clientX-rDown[0],e.clientY-rDown[1])>5)return;const el=document.elementFromPoint(e.clientX,e.clientY),g=el&&el.closest&&el.closest('[data-k^="rack:"]'),w=toW(e.clientX,e.clientY);showCtx(e.clientX,e.clientY,g?g.dataset.k.slice(5):null,{view:'plan',x:w[0],y:w[1]})});
-svg.addEventListener('dblclick',e=>{const tg=e.target.closest&&e.target.closest('[data-k^="text:"]');if(tg){Sel.t=tg.dataset.k.slice(5);if(tool!=='text')setTool('select');renderSel();render();openTBox('plan',Sel.t);return}if(!(e.target.closest&&e.target.closest('[data-k]'))&&['select','text'].includes(tool)){const w=toW(e.clientX,e.clientY);newText('plan',w[0],w[1]);return}if(tool==='rack'&&pend&&e.target.closest&&e.target.closest('[data-k="pend"]'))confirmPend()});
+svg.addEventListener('contextmenu',e=>{e.preventDefault();if((tool==='pwall'&&PWD)||(tool==='room'&&ROOMA)){PWD=null;ROOMA=null;ghost=null;renderOv();toast('그리기를 끝냈습니다.');return}if(rDown&&Math.hypot(e.clientX-rDown[0],e.clientY-rDown[1])>5)return;const el=document.elementFromPoint(e.clientX,e.clientY),g=el&&el.closest&&el.closest('[data-k^="rack:"]'),w=toW(e.clientX,e.clientY);showCtx(e.clientX,e.clientY,g?g.dataset.k.slice(5):null,{view:'plan',x:w[0],y:w[1]})});
+svg.addEventListener('dblclick',e=>{if(tool==='pwall'){PWD=null;ghost=null;renderOv();return}const tg=e.target.closest&&e.target.closest('[data-k^="text:"]');if(tg){Sel.t=tg.dataset.k.slice(5);if(tool!=='text')setTool('select');renderSel();render();openTBox('plan',Sel.t);return}if(!(e.target.closest&&e.target.closest('[data-k]'))&&['select','text'].includes(tool)){const w=toW(e.clientX,e.clientY);newText('plan',w[0],w[1]);return}if(tool==='rack'&&pend&&e.target.closest&&e.target.closest('[data-k="pend"]'))confirmPend()});
 function hover(w){
+  if(tool==='room'){ghost=ROOMA?{t:'nroom',r:normRect(ROOMA,snapPt(w))}:{t:'pt',p:snapPt(w)};renderOv();return}
+  if(tool==='pwall'){ghost=PWD?{t:'npw',a:PWD.a,b:pwEnd(PWD.a,w)}:{t:'pt',p:snapPt(w)};renderOv();return}
   if(tool==='rack'){if(pend){if(ghost){ghost=null;renderOv()}}else{ghost=ghostRack(w);renderOv()}}
   else if(tool==='beam'){ghost=ghostBeam(w);renderOv()}
-  else if(tool==='door'){const d={x:w[0],y:w[1],w:+S.doorW,h:+S.doorH,kind:S.doorKind,out:!!S.doorOut,flip:false};doorFix(d,true);ghost={t:'door',d};renderOv()}
+  else if(tool==='door'){const d={x:w[0],y:w[1],w:+S.doorW,h:+S.doorH,kind:S.doorKind,out:!!S.doorOut,flip:false};doorFix(d,true,true);ghost={t:'door',d};renderOv()}
   else if(tool==='measure'&&meas&&meas.a&&!meas.b){meas.h=[snapG(w[0]),snapG(w[1])];renderOv()}
 }
 function click(w,d){
-  if(tool==='select'){if(d.clear&&(Sel.r.size||Sel.b||Sel.d||Sel.k||Sel.t)){Sel.r.clear();Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.v=null;renderSel();render()}return}
+  if(tool==='select'){if(d.clear&&(Sel.r.size||Sel.b||Sel.d||Sel.k||Sel.t||Sel.m||Sel.w)){Sel.r.clear();Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.m=null;Sel.w=null;Sel.v=null;renderSel();render()}return}
   if(tool==='rack'){const sp=S.spec;if(!pend){const g=ghostRack(w);pend={x:g.f.x,y:g.f.y,rot:ghostRot,W:sp.W,D:sp.D,H:sp.H,L:sp.L,P:sp.P,uw:+sp.uw||100,bt:+sp.bt||100}}else{const f0=fp(pend),f={x:w[0]-f0.w/2,y:w[1]-f0.h/2,w:f0.w,h:f0.h};[pend.x,pend.y]=snapRect(f,null)}ghost=null;renderOv();renderSel();return}
   if(tool==='beam'){const g=ghostBeam(w);if(g.bad){toast('랙이나 다른 기둥과 겹치는 자리입니다.');return}const b={id:uid(),x:g.x,y:g.y,w:+S.beamW,h:+S.beamH};S.beams.push(b);Sel.b=b.id;commit();render();renderSel();return}
   if(tool==='text'){newText('plan',w[0],w[1]);return}
-  if(tool==='door'){const d={id:uid(),x:w[0],y:w[1],w:+S.doorW,h:+S.doorH,kind:S.doorKind,out:!!S.doorOut,flip:false};const g=doorFix(d,true);if(g.len<d.w){toast('이 벽은 출입구 폭보다 짧습니다.');return}S.doors=S.doors||[];S.doors.push(d);Sel.r.clear();Sel.b=null;Sel.d=d.id;commit();render();renderSel();toast(`출입구${S.doors.length}을(를) 놓았습니다. 위쪽 줄에서 모서리 거리를 입력해 정확히 맞추세요.`);return}
+  if(tool==='door'){const d={id:uid(),x:w[0],y:w[1],w:+S.doorW,h:+S.doorH,kind:S.doorKind,out:!!S.doorOut,flip:false};const g=doorFix(d,true,true);if(g.len<d.w){toast('이 벽은 출입구 폭보다 짧습니다.');return}S.doors=S.doors||[];S.doors.push(d);Sel.r.clear();Sel.b=null;Sel.d=d.id;commit();render();renderSel();toast(`출입구${S.doors.length}을(를) 놓았습니다. 위쪽 줄에서 모서리 거리를 입력해 정확히 맞추세요.`);return}
   if(tool==='measure'){const p=[snapG(w[0]),snapG(w[1])];if(!meas||meas.b)meas={a:p,b:null};else meas.b=p;renderOv();return}
+  if(tool==='pwall'){if(!PWD){PWD={a:snapPt(w)};ghost={t:'pt',p:PWD.a};renderOv();toast('끝점을 누르세요 · 계속 누르면 이어서 그립니다 · Esc·우클릭·더블클릭으로 끝내기');return}
+    const b=pwEnd(PWD.a,w),L=Math.hypot(b[0]-PWD.a[0],b[1]-PWD.a[1]);if(L<100)return;const D=S.pwDef,p={id:uid(),a:PWD.a,b,t:+D.t||100,h3:+D.h3||3000,mat:D.mat||'ure'};S.pwalls=S.pwalls||[];S.pwalls.push(p);PWD={a:b};Sel.w=p.id;commit();render();renderSel();return}
+  if(tool==='room'){return}
   if(tool==='spawn'){if(!pip(w[0],w[1],S.poly)){toast('창고 안쪽을 눌러 주세요.');return}S.spawn={x:Math.round(w[0]),y:Math.round(w[1])};commit();renderOv();toast('3D 워크스루 시작 위치를 정했습니다.');return}
   if(tool==='wall'){Sel.v=null;renderVerts();renderSel();renderOv()}
 }
@@ -1259,6 +1407,8 @@ function click(w,d){
 function confirmPend(){if(!pend)return;const f=fp(pend);if(checkRect(f)==='err'){toast('설치할 수 없습니다. 벽 밖이거나 다른 랙·H빔과 겹칩니다. 위쪽 간격을 확인하세요.');return}const r={...pend,id:uid()};S.racks.push(r);pend=null;Sel.r.clear();commit();render();renderSel();toast(`설치했습니다 · ${LB.lab.get(r.id)||''} · 다음 위치를 누르세요`)}
 function cancelPend(){if(!pend)return;pend=null;renderOv();renderSel()}
 function rotSel(){
+  if(Sel.m&&['select','room'].includes(tool)){const m=roomById(Sel.m);if(m){const cx=m.x+m.w/2,cy=m.y+m.h/2;[m.w,m.h]=[m.h,m.w];m.x=Math.round(cx-m.w/2);m.y=Math.round(cy-m.h/2);roomDoors(m).forEach(d=>doorFix(d));commit();render();renderSel()}return}
+  if(Sel.w&&['select','pwall'].includes(tool)){const p=pwById(Sel.w);if(p){const cx=(p.a[0]+p.b[0])/2,cy=(p.a[1]+p.b[1])/2,r=q=>[Math.round(cx-(q[1]-cy)),Math.round(cy+(q[0]-cx))];p.a=r(p.a);p.b=r(p.b);pwDoors(p).forEach(d=>{const n=r([d.x,d.y]);d.x=n[0];d.y=n[1]});commit();render();renderSel()}return}
   if((tool==='select'||tool==='text')&&Sel.t){const t=textById(Sel.t);if(t){const r=t.rot||0;t.rot=r===90?180:r===180?-90:r===-90?0:90;commit();render();renderSel()}return}
   if(tool==='select'&&!Sel.r.size&&Sel.b){$('#hbSwap').click();return}
   if((tool==='select'||tool==='door')&&Sel.d){const d=doorById(Sel.d);if(d&&d.kind!=='shutter'){d.flip=!d.flip;commit();render();renderSel()}return}
@@ -1274,21 +1424,23 @@ function dup(){
 }
 function del(){
   if(pend&&tool==='rack'){cancelPend();return}
+  if(Sel.m){const m=roomById(Sel.m);if(m){const ds=roomDoors(m).map(d=>d.id);S.rooms=S.rooms.filter(x=>x!==m);S.doors=(S.doors||[]).filter(d=>!ds.includes(d.id));Sel.m=null;commit();render();renderSel();toast(`${m.name||'공간'}을(를) 삭제했습니다${ds.length?` · 방열문 ${ds.length}개 함께 삭제`:''}. 되돌리기로 복구할 수 있습니다.`)}return}
+  if(Sel.w){const p=pwById(Sel.w);if(p){const ds=pwDoors(p).map(d=>d.id);S.pwalls=S.pwalls.filter(x=>x!==p);S.doors=(S.doors||[]).filter(d=>!ds.includes(d.id));Sel.w=null;commit();render();renderSel();toast(`가벽을 삭제했습니다${ds.length?` · 문 ${ds.length}개 함께 삭제`:''}.`)}return}
   if(Sel.k){S.decks=S.decks.filter(d=>d.id!==Sel.k);Sel.k=null;commit();render();renderSel();toast('데크를 삭제했습니다.');return}
-  if(Sel.t){S.texts=S.texts.filter(t=>t.id!==Sel.t);Sel.t=null;commit();render();renderSel();return}
+  if(Sel.t){S.texts=S.texts.filter(t=>t.id!==Sel.t);Sel.t=null;Sel.m=null;Sel.w=null;commit();render();renderSel();return}
   if(tool==='wall'&&Sel.v!=null){if(S.poly.length<=3){toast('꼭짓점은 3개 이상이어야 합니다.');return}S.poly.splice(Sel.v,1);Sel.v=null;commit();render();renderVerts();renderSel();return}
   if(Sel.d){S.doors=S.doors.filter(d=>d.id!==Sel.d);Sel.d=null;commit();render();renderSel();toast('출입구를 삭제했습니다.');return}
-  if(Sel.b){S.beams=S.beams.filter(b=>b.id!==Sel.b);Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;commit();render();renderSel();return}
+  if(Sel.b){S.beams=S.beams.filter(b=>b.id!==Sel.b);Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.m=null;Sel.w=null;commit();render();renderSel();return}
   if(Sel.r.size){const n=Sel.r.size;S.racks=S.racks.filter(r=>!Sel.r.has(r.id));Sel.r.clear();commit();render();renderSel();toast(`랙 ${n}개를 삭제했습니다.`)}
 }
 function nudge(dx,dy){
   if(pend&&tool==='rack'){pend.x+=dx;pend.y+=dy;renderOv();renderSel();return}
-  if(Sel.r.size){S.racks.forEach(r=>{if(Sel.r.has(r.id)){r.x+=dx;r.y+=dy}})}else if(Sel.b){const b=beamById(Sel.b);b.x+=dx;b.y+=dy}else if(Sel.t){const t=textById(Sel.t);t.x+=dx;t.y+=dy}else if(Sel.k){const k=deckById(Sel.k);k.x+=dx;k.y+=dy}else if(tool==='wall'&&Sel.v!=null){S.poly[Sel.v][0]+=dx;S.poly[Sel.v][1]+=dy;renderVerts()}else return;
+  if(Sel.r.size){S.racks.forEach(r=>{if(Sel.r.has(r.id)){r.x+=dx;r.y+=dy}})}else if(Sel.b){const b=beamById(Sel.b);b.x+=dx;b.y+=dy}else if(Sel.t){const t=textById(Sel.t);t.x+=dx;t.y+=dy}else if(Sel.k){const k=deckById(Sel.k);k.x+=dx;k.y+=dy}else if(Sel.m){moveRoom(roomById(Sel.m),dx,dy)}else if(Sel.w){movePw(pwById(Sel.w),dx,dy)}else if(tool==='wall'&&Sel.v!=null){S.poly[Sel.v][0]+=dx;S.poly[Sel.v][1]+=dy;renderVerts()}else return;
   commit();render();renderSel();
 }
-function setTool(t){tool=t;ghost=null;if(t!=='select'&&t!=='door')Sel.d=null;if(t!=='select'&&t!=='deck')Sel.k=null;if(t!=='select'&&t!=='text')Sel.t=null;if(t!=='rack')pend=null;if(t!=='measure')meas=null;$$('#tools button').forEach(b=>b.classList.toggle('on',b.dataset.tool===t));
-  const H={select:'옆 랙에 대면 기둥 공유로 붙음 · Alt+끌기 자석 끔 · Shift+휠 10mm 이동 · J 기둥 공유 · Shift+J 풀기',rack:'누르면 임시 랙이 생깁니다 · 끌거나 다른 곳을 눌러 위치 조정 · 위쪽에서 앞뒤·양옆 간격 확인/입력 · Enter·더블클릭 설치 · Esc 취소 · R 회전',beam:'누르는 곳에 H빔 기둥을 놓습니다 · 놓기 전에 X·Y 방향으로 벽·랙·기둥까지 거리가 보입니다',door:'벽 가까이를 누르면 출입구가 생깁니다 · 위쪽 줄에서 가로·높이·모서리에서 거리를 입력하세요',deck:'끌어서 데크(복층) 영역을 그립니다 · 위쪽 줄에서 위치·크기·상면 높이·두께를 입력하세요',text:'누른 곳에 텍스트 상자가 뜹니다 · 바로 입력하고 Enter · 어느 도구에서든 빈 곳 더블클릭이나 우클릭 → 텍스트 넣기도 됩니다',wall:'벽 변을 누르면 실측 길이 입력칸으로 이동 · 꼭짓점 끌기 · 변 가운데 + 로 꼭짓점 추가',measure:'두 점을 차례로 눌러 거리를 잽니다',spawn:'3D 워크스루를 시작할 위치를 누르세요'};
-  $('#hintTxt').textContent=H[t];$('#qbar').hidden=!(t==='select'||t==='rack'||t==='beam'||t==='door'||t==='deck'||t==='text');$('#wallBox').hidden=t!=='wall';if(t==='wall')renderWall();if(t==='wall'){$('#dSel').open=true}renderOv();renderSel();
+function setTool(t){tool=t;ghost=null;if(t!=='room')ROOMA=null;if(t!=='pwall')PWD=null;if(t!=='select'&&t!=='room')Sel.m=null;if(t!=='select'&&t!=='pwall')Sel.w=null;if(t!=='select'&&t!=='door')Sel.d=null;if(t!=='select'&&t!=='deck')Sel.k=null;if(t!=='select'&&t!=='text')Sel.t=null;if(t!=='rack')pend=null;if(t!=='measure')meas=null;$$('#tools button').forEach(b=>b.classList.toggle('on',b.dataset.tool===t));
+  const H={select:'옆 랙에 대면 기둥 공유로 붙음 · Alt+끌기 자석 끔 · Shift+휠 10mm 이동 · J 기둥 공유 · Shift+J 풀기',rack:'누르면 임시 랙이 생깁니다 · 끌거나 다른 곳을 눌러 위치 조정 · 위쪽에서 앞뒤·양옆 간격 확인/입력 · Enter·더블클릭 설치 · Esc 취소 · R 회전',beam:'누르는 곳에 H빔 기둥을 놓습니다 · 놓기 전에 X·Y 방향으로 벽·랙·기둥까지 거리가 보입니다',door:'벽 가까이를 누르면 출입구가 생깁니다 · 위쪽 줄에서 가로·높이·모서리에서 거리를 입력하세요',deck:'끌어서 데크(복층) 영역을 그립니다 · 위쪽 줄에서 위치·크기·상면 높이·두께를 입력하세요',text:'누른 곳에 텍스트 상자가 뜹니다 · 바로 입력하고 Enter · 어느 도구에서든 빈 곳 더블클릭이나 우클릭 → 텍스트 넣기도 됩니다',wall:'벽 변을 누르면 실측 길이 입력칸으로 이동 · 꼭짓점 끌기 · 변 가운데 + 로 꼭짓점 추가',measure:'두 점을 차례로 눌러 거리를 잽니다',room:'대각선으로 끌거나 두 모서리를 눌러 공간(워크인 등)을 만듭니다 · 창고 벽에 붙은 면은 가벽 생략 · 기존 공간을 끌면 이동, 테두리 네모로 크기 조절',pwall:'시작점·끝점을 차례로 눌러 가벽을 그립니다 · 이어서 계속 그리기 · 수평·수직 자동 · Alt 자유 각도 · Esc·우클릭으로 끝내기',spawn:'3D 워크스루를 시작할 위치를 누르세요'};
+  $('#hintTxt').textContent=H[t];$('#qbar').hidden=!(t==='select'||t==='rack'||t==='beam'||t==='door'||t==='deck'||t==='text'||t==='room'||t==='pwall');$('#wallBox').hidden=t!=='wall';if(t==='wall')renderWall();if(t==='wall'){$('#dSel').open=true}renderOv();renderSel();
 }
 
 /* ---------------- 패널 ---------------- */
@@ -1310,7 +1462,7 @@ function renderVerts(){
 $('#vtx').addEventListener('change',e=>{const t=e.target;if(t.dataset.vi==null)return;const v=+t.value;if(!isFinite(v))return;S.poly[+t.dataset.vi][+t.dataset.ax]=v;commit();render();renderVerts()});
 $('#vtx').addEventListener('click',e=>{const b=e.target.closest('[data-vdel]');if(!b)return;if(S.poly.length<=3){toast('꼭짓점은 3개 이상이어야 합니다.');return}S.poly.splice(+b.dataset.vdel,1);Sel.v=null;commit();render();renderVerts()});
 $('#bVAdd').onclick=()=>{const P=S.poly,a=P[P.length-1],b=P[0];P.push([Math.round((a[0]+b[0])/2),Math.round((a[1]+b[1])/2)]);commit();render();renderVerts();setTool('wall')};
-$('#bOrigin').onclick=()=>{const bb=bbox(S.poly),dx=-bb.minX,dy=-bb.minY;if(!dx&&!dy)return;S.poly=S.poly.map(v=>[v[0]+dx,v[1]+dy]);S.racks.forEach(r=>{r.x+=dx;r.y+=dy});S.beams.forEach(b=>{b.x+=dx;b.y+=dy});if(S.spawn){S.spawn.x+=dx;S.spawn.y+=dy}commit();render();renderVerts();fitView()};
+$('#bOrigin').onclick=()=>{const bb=bbox(S.poly),dx=-bb.minX,dy=-bb.minY;if(!dx&&!dy)return;S.poly=S.poly.map(v=>[v[0]+dx,v[1]+dy]);S.racks.forEach(r=>{r.x+=dx;r.y+=dy});S.beams.forEach(b=>{b.x+=dx;b.y+=dy});(S.rooms||[]).forEach(m=>{m.x+=dx;m.y+=dy});(S.pwalls||[]).forEach(p=>{p.a=[p.a[0]+dx,p.a[1]+dy];p.b=[p.b[0]+dx,p.b[1]+dy]});(S.doors||[]).forEach(d=>{d.x+=dx;d.y+=dy});link();S.sheets.forEach(sh=>(sh.texts||[]).forEach(t=>{t.x+=dx;t.y+=dy}));if(S.spawn){S.spawn.x+=dx;S.spawn.y+=dy}commit();render();renderVerts();fitView()};
 function presetPoly(k,W,H){const r=v=>Math.round(v/10)*10,m={
   rect:[[0,0],[W,0],[W,H],[0,H]],
   L:[[0,0],[W,0],[W,H*0.55],[W*0.6,H*0.55],[W*0.6,H],[0,H]],
@@ -1337,9 +1489,9 @@ $('#bSpecSel').onclick=()=>{if(!Sel.r.size){toast('먼저 랙을 선택하세요
 $('#bSpecAll').onclick=()=>applySpec(()=>true);
 function applySpec(pred){const sp=S.spec;let n=0;S.racks.forEach(r=>{if(pred(r)){Object.assign(r,{W:sp.W,D:sp.D,H:sp.H,L:sp.L,P:sp.P,uw:+sp.uw||100,bt:+sp.bt||100});n++}});commit();render();renderSel();toast(`랙 ${n}개에 규격을 적용했습니다.`)}
 $('#bAuto').onclick=()=>{const n=autoLayout(S);Sel.r.clear();commit();render();renderSel();toast(`자동 배치 완료 · 랙 ${n}칸`)};
-$('#bBeamGrid').onclick=()=>{const n=beamGrid(S);Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;commit();render();renderSel();toast(`H빔 ${n}개를 놓았습니다. 랙과 겹치면 자동 배치를 다시 실행하세요.`)};
-$('#bBeamClear').onclick=()=>{S.beams=[];Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;commit();render();renderSel()};
-function doReset(empty){const d=empty?defaults():sample();if(empty){d.meta={...d.meta,name:'',client:'',note:'',author:''}}S=normSheets(d);Sel.r.clear();Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.v=null;Sel.e=null;meas=null;commit();afterLoad();fitView('room');$('#cfm').hidden=true;toast(empty?'빈 30×20m 창고로 초기화했습니다. 되돌리기로 복구할 수 있습니다.':'예시 데이터로 초기화했습니다. 되돌리기로 복구할 수 있습니다.')}
+$('#bBeamGrid').onclick=()=>{const n=beamGrid(S);Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.m=null;Sel.w=null;commit();render();renderSel();toast(`H빔 ${n}개를 놓았습니다. 랙과 겹치면 자동 배치를 다시 실행하세요.`)};
+$('#bBeamClear').onclick=()=>{S.beams=[];Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.m=null;Sel.w=null;commit();render();renderSel()};
+function doReset(empty){const d=empty?defaults():sample();if(empty){d.meta={...d.meta,name:'',client:'',note:'',author:''}}S=normSheets(d);Sel.r.clear();Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.m=null;Sel.w=null;Sel.v=null;Sel.e=null;meas=null;commit();afterLoad();fitView('room');$('#cfm').hidden=true;toast(empty?'빈 30×20m 창고로 초기화했습니다. 되돌리기로 복구할 수 있습니다.':'예시 데이터로 초기화했습니다. 되돌리기로 복구할 수 있습니다.')}
 function askReset(){$('#cfm').hidden=false;$('#cfmCancel').focus()}
 $('#bReset').onclick=askReset;$('#bClear').onclick=askReset;
 $('#cfmEmpty').onclick=()=>doReset(true);$('#cfmSample').onclick=()=>doReset(false);$('#cfmCancel').onclick=()=>$('#cfm').hidden=true;
@@ -1359,10 +1511,12 @@ function renderSel(){
   else if(Sel.r.size>1){h=`<p class="note">랙 ${Sel.r.size}개 선택 · 함께 끌어 옮기거나 아래 값을 한 번에 바꿀 수 있습니다.</p><div class="fields">${num('sm_H','높이',S.spec.H,100)}${num('sm_L','단수',S.spec.L,1)}</div><div class="row"><button class="btn sm" id="sm_apply">높이·단수 적용</button></div>`}
   else if(Sel.k){const d=deckById(Sel.k);if(d)h=`<p class="note">데크${S.decks.indexOf(d)+1} · ${fmt(d.w)}×${fmt(d.h)} · 상면 EL+${fmt(d.z)} · 두께 ${fmt(d.t)}. 수치는 위쪽 줄에서 고칩니다. 데크 위의 랙은 데크 페이지에서 배치합니다.</p>`}
   else if(Sel.t){const t=textById(Sel.t);if(t)h=`<p class="note">텍스트 “${esc(t.s)}” · ${t.size}mm · ${(FONTS[t.font]||FONTS.sans).n}. 위쪽 줄에서 고칩니다.</p>`}
-  else if(Sel.d){const d=doorById(Sel.d);if(d){const g=doorGeo(d),k=S.doors.indexOf(d),n=S.poly.length;h=`<p class="note">출입구${k+1} · ${(KN[d.kind]||'여닫이문')} ${fmt(d.w)}×${fmt(d.h)} · P${g.i+1}→P${(g.i+1)%n+1} 벽 · P${g.i+1}에서 ${fmt(g.s0)} / P${(g.i+1)%n+1}까지 ${fmt(g.s1)} mm. 수치는 위쪽 줄에서 고칩니다.</p>`}}
+  else if(Sel.d){const d=doorById(Sel.d);if(d){const g=doorGeo(d),k=S.doors.indexOf(d);h=`<p class="note">출입구${k+1} · ${(KN[d.kind]||'여닫이문')} ${fmt(d.w)}×${fmt(d.h)} · ${g.wall} · ${g.nA}에서 ${fmt(g.s0)} / ${g.nB}까지 ${fmt(g.s1)} mm. 수치는 위쪽 줄에서 고칩니다.</p>`}}
   else if(Sel.b){const b=beamById(Sel.b);if(b)h=`<p class="note">H빔 기둥 ${bName(b.w,b.h)} · 가로 ${fmt(b.w)} × 세로 ${fmt(b.h)} · 점선은 랙 이격 범위</p><div class="fields">${num('sb_w','가로 (X)',Math.round(b.w))}${num('sb_h','세로 (Y)',Math.round(b.h))}${num('sb_x','중심 X',Math.round(b.x))}${num('sb_y','중심 Y',Math.round(b.y))}</div>`}
-  if(!h)h=`<p class="note">도면에서 랙, H빔, 꼭짓점(벽 편집)을 누르면 여기서 수치로 고칠 수 있습니다.</p>`;
-  else if(!(tool==='wall'&&Sel.v!=null))h+=`<div class="row"><button class="btn sm" id="ss_rot"${Sel.b||Sel.d||Sel.k?' hidden':''}>회전</button><button class="btn sm" id="ss_dup"${Sel.b||Sel.d||Sel.k?' hidden':''}>복제</button><button class="btn sm" id="ss_del">삭제</button></div>`;
+  else if(Sel.m){const m=roomById(Sel.m);if(m){const ar=roomArea(m),st=AN.get(m.id);h=`<p class="note"><b style="color:var(--steel)">${esc(m.name||'공간')}</b> · ${(ROOMK[m.kind]||ROOMK.etc).n} · ${fmt(m.w)}×${fmt(m.h)} · ${ar.toFixed(1)}㎡ (${pyeong(ar).toFixed(1)}평) · 가벽 ${partSegs().filter(q=>q.id===m.id).length}면${st?` · <span style="color:var(${st.lvl==='err'?'--err':'--warn'})">${st.msgs.join(', ')}</span>`:''}. 테두리 가운데 네모를 끌면 크기가 바뀝니다. 수치는 위쪽 줄에서 고칩니다.</p>`}}
+  else if(Sel.w){const p=pwById(Sel.w);if(p)h=`<p class="note">가벽 · ${fmt(Math.hypot(p.b[0]-p.a[0],p.b[1]-p.a[1]))} mm · ${(PMAT[p.mat]||PMAT.ure)} ${fmt(p.t)}T · 높이 ${fmt(p.h3)}. 끝점 동그라미를 끌거나 위쪽 줄에서 길이를 고칩니다.</p>`}
+  if(!h)h=`<p class="note">도면에서 랙, H빔, 공간·가벽, 꼭짓점(벽 편집)을 누르면 여기서 수치로 고칠 수 있습니다.</p>`;
+  else if(!(tool==='wall'&&Sel.v!=null))h+=`<div class="row"><button class="btn sm" id="ss_rot"${Sel.b||Sel.d||Sel.k?' hidden':''}>회전</button><button class="btn sm" id="ss_dup"${Sel.b||Sel.d||Sel.k||Sel.m||Sel.w?' hidden':''}>복제</button><button class="btn sm" id="ss_del">삭제</button></div>`;
   box.innerHTML=h;
   const on=(id,fn)=>{const el=$('#'+id);if(el)el.addEventListener('change',fn)};
   const r=Sel.r.size===1?rackById([...Sel.r][0]):null;
@@ -1376,20 +1530,20 @@ function renderSel(){
 function renderInfo(){
   const st=stats();
   $('#stats').innerHTML=[[fmt(st.n),'랙 (칸)'],[fmt(st.pos),'팔레트 적재 위치'],[`${st.pct.toFixed(1)}%`,'바닥 점유율'],[fmt(st.frames),'프레임'],[fmt(st.beams),'빔'],[fmt(S.beams.length),'H빔 기둥']].map(([a,b])=>`<div><b>${a}</b><span>${b}</span></div>`).join('');
-  const list=[...AN.entries()].map(([id,e])=>({id,...e,lab:LB.lab.get(id)||''})).sort((a,b)=>(a.lvl==='err'?0:1)-(b.lvl==='err'?0:1)||a.lab.localeCompare(b.lab));
+  const list=[...AN.entries()].map(([id,e])=>({id,...e,lab:LB.lab.get(id)||(roomById(id)||{}).name||(pwById(id)?'가벽':'')})).sort((a,b)=>(a.lvl==='err'?0:1)-(b.lvl==='err'?0:1)||a.lab.localeCompare(b.lab));
   const ne=list.filter(x=>x.lvl==='err').length,nw=list.length-ne;
   $('#issBadge').innerHTML=list.length?`<span class="pill err">오류 ${ne} · 주의 ${nw}</span>`:`<span class="pill ok">문제 없음</span>`;
   $('#stIss').textContent=list.length?`검토: 오류 ${ne} · 주의 ${nw}`:'검토: 문제 없음';$('#stIss').style.color=ne?'var(--err)':nw?'var(--warn)':'var(--ok)';
   $('#issues').innerHTML=list.slice(0,60).map(x=>`<li class="${x.lvl}" data-id="${x.id}"><b>${x.lab}</b><span>${x.msgs.join(', ')}</span></li>`).join('')+(list.length>60?`<li>외 ${list.length-60}건</li>`:'');
 }
-$('#issues').addEventListener('click',e=>{const li=e.target.closest('[data-id]');if(!li)return;setTool('select');Sel.r=new Set([li.dataset.id]);Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;const r=rackById(li.dataset.id);if(r){autoFit=false;const f=fp(r),rr=svgRect();V.x=f.x+f.w/2-rr.width/V.s/2;V.y=f.y+f.h/2-rr.height/V.s/2;applyView()}render();renderSel();document.body.classList.remove('panel-open')});
+$('#issues').addEventListener('click',e=>{const li=e.target.closest('[data-id]');if(!li)return;{const rm=roomById(li.dataset.id),pw=pwById(li.dataset.id);if(rm||pw){setTool('select');Sel.r.clear();Sel.b=null;Sel.d=null;Sel.m=rm?rm.id:null;Sel.w=pw?pw.id:null;const c=rm?[rm.x+rm.w/2,rm.y+rm.h/2]:[(pw.a[0]+pw.b[0])/2,(pw.a[1]+pw.b[1])/2],rr=svgRect();autoFit=false;V.x=c[0]-rr.width/V.s/2;V.y=c[1]-rr.height/V.s/2;applyView();render();renderSel();document.body.classList.remove('panel-open');return}}setTool('select');Sel.r=new Set([li.dataset.id]);Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.m=null;Sel.w=null;const r=rackById(li.dataset.id);if(r){autoFit=false;const f=fp(r),rr=svgRect();V.x=f.x+f.w/2-rr.width/V.s/2;V.y=f.y+f.h/2-rr.height/V.s/2;applyView()}render();renderSel();document.body.classList.remove('panel-open')});
 $('#stIss').onclick=()=>{$('#dIss').open=true;openPanel();$('#dIss').scrollIntoView({block:'start'})};
 
 
 /* ---------------- 빠른 랙 규격 바 ---------------- */
 const QK=['W','D','H','L','P','uw','bt'];
 function renderQbar(){
-  renderHbar();renderDbar();renderKbar();renderXbar();
+  renderMbar();renderPwbar();renderHbar();renderDbar();renderKbar();renderXbar();
   renderGapRow();renderWf();
   const sel=S.racks.filter(r=>Sel.r.has(r.id));const src=(tool==='rack'&&pend)||sel[0]||S.spec;
   $('#qbLab').textContent=(tool==='rack'&&pend)?'임시 랙 규격':sel.length?`선택 랙 ${sel.length}개`:'새 랙 규격';
@@ -1409,6 +1563,37 @@ QK.forEach(k=>$('#q_'+k).addEventListener('change',e=>{
 $('#qbAll').onclick=()=>{const v={};QK.forEach(k=>v[k]=Math.round(+$('#q_'+k).value));if(QK.some(k=>!(v[k]>0)))return;Object.assign(S.spec,v);S.racks.forEach(r=>Object.assign(r,v));syncInputs();commit();render();renderSel();const bad=[...AN.values()].filter(x=>x.lvl==='err').length;toast(`전체 ${S.racks.length}개 랙에 적용했습니다.${bad?` 겹치는 랙 ${bad}개는 자동 배치를 다시 실행하거나 옮겨 주세요.`:''}`)};
 
 
+
+/* ---------------- 공간 · 가벽 입력줄 ---------------- */
+function mTarget(){return (tool==='select'||tool==='room')&&Sel.m?roomById(Sel.m):null}
+function pwTarget(){return (tool==='select'||tool==='pwall')&&Sel.w?pwById(Sel.w):null}
+function renderMbar(){const m=mTarget(),on=tool==='room'||!!m;$('#qbar').classList.toggle('room',on);if(!on)return;const src=m||S.roomDef;
+  const set=(id,v)=>{const el=$('#'+id);if(document.activeElement===el)return;if(el.type==='checkbox')el.checked=!!v;else el.value=v};
+  $('#mbLab').textContent=m?'선택 공간':'새 공간';['mNmL','mSubL','mGeo','mAutoL'].forEach(id=>$('#'+id).hidden=!m);
+  set('m_kind',src.kind||'cool');set('m_mat',src.mat||'ure');set('m_t',+src.t||100);set('m_h3',+src.h3||3000);
+  if(m){set('m_nm',m.name||'');set('m_sub',m.sub||'');set('m_x',Math.round(m.x));set('m_y',Math.round(m.y));set('m_w',Math.round(m.w));set('m_h',Math.round(m.h));set('m_auto',m.auto);
+    const ar=roomArea(m),inn=roomInner(m),nd=roomDoors(m).length;$('#mNote').textContent=`면적 ${ar.toFixed(1)}㎡ (${pyeong(ar).toFixed(1)}평) · 내부 유효 ${fmt(inn.w)}×${fmt(inn.h)} · 출입문 ${nd}개${nd?'':' (출입구 도구로 추가)'}`}
+  else $('#mNote').textContent=ROOMA?'반대쪽 모서리를 누르세요 · Esc 취소':'도면에서 대각선으로 끌거나 두 모서리를 차례로 누르세요 · 창고 벽에 붙은 면은 가벽을 세우지 않습니다'}
+function renderPwbar(){const p=pwTarget(),on=tool==='pwall'||!!p;$('#qbar').classList.toggle('pwall',on);if(!on)return;const src=p||S.pwDef;
+  const set=(id,v)=>{const el=$('#'+id);if(document.activeElement!==el)el.value=v};
+  $('#pwLab').textContent=p?'선택 가벽':'새 가벽';$('#pwLenL').hidden=!p;set('pw_mat',src.mat||'ure');set('pw_t',+src.t||100);set('pw_h3',+src.h3||3000);
+  if(p){const L=Math.hypot(p.b[0]-p.a[0],p.b[1]-p.a[1]),an=Math.round(Math.atan2(-(p.b[1]-p.a[1]),p.b[0]-p.a[0])*180/Math.PI);set('pw_len',Math.round(L));$('#pwNote').textContent=`각도 ${an}° · 문 ${pwDoors(p).length}개 · 끝점 동그라미를 끌어 길이·방향 조정`}
+  else $('#pwNote').textContent=PWD?'끝점을 누르세요 · 이어서 그리기 · Esc·우클릭·더블클릭으로 끝내기':'시작점과 끝점을 차례로 누르세요 · 수평·수직은 자동으로 맞춤 · Alt 누르면 자유 각도'}
+function mSet(k,v){const m=mTarget();if(m){if(k==='x'||k==='y'){moveRoom(m,k==='x'?v-m.x:0,k==='y'?v-m.y:0)}else m[k]=v}else if(['kind','mat','t','h3'].includes(k))S.roomDef[k]=v;if(['kind','mat','t','h3'].includes(k)&&m)S.roomDef[k]=v;commit();render();renderSel()}
+$('#m_nm').addEventListener('change',e=>mSet('name',e.target.value.trim()||'공간'));
+$('#m_sub').addEventListener('change',e=>mSet('sub',e.target.value.trim()));
+$('#m_kind').addEventListener('change',e=>mSet('kind',e.target.value));
+$('#m_mat').addEventListener('change',e=>mSet('mat',e.target.value));
+$('#m_t').addEventListener('change',e=>{const v=+e.target.value;if(!(v>=10&&v<=400)){toast('벽 두께는 10~400mm로 입력하세요.');renderMbar();return}mSet('t',v)});
+$('#m_h3').addEventListener('change',e=>{const v=+e.target.value;if(!(v>=500)){renderMbar();return}if(v>S.ceil)toast(`천장 높이 ${fmt(S.ceil)}보다 높습니다. 3D·정면도에서는 천장까지만 그립니다.`);mSet('h3',v)});
+['x','y'].forEach(k=>$('#m_'+k).addEventListener('change',e=>{const v=+e.target.value;if(!isFinite(v)){renderMbar();return}mSet(k,Math.round(v))}));
+['w','h'].forEach(k=>$('#m_'+k).addEventListener('change',e=>{const v=+e.target.value;if(!(v>=600)){toast('공간은 600mm 이상이어야 합니다.');renderMbar();return}mSet(k,Math.round(v))}));
+$('#m_auto').addEventListener('change',e=>mSet('auto',e.target.checked));
+function pwSet(k,v){const p=pwTarget();if(p){if(k==='len'){const L=Math.hypot(p.b[0]-p.a[0],p.b[1]-p.a[1])||1;p.b=[Math.round(p.a[0]+(p.b[0]-p.a[0])/L*v),Math.round(p.a[1]+(p.b[1]-p.a[1])/L*v)]}else p[k]=v}if(k!=='len')S.pwDef[k]=v;commit();render();renderSel()}
+$('#pw_mat').addEventListener('change',e=>pwSet('mat',e.target.value));
+$('#pw_t').addEventListener('change',e=>{const v=+e.target.value;if(!(v>=10&&v<=400)){renderPwbar();return}pwSet('t',v)});
+$('#pw_h3').addEventListener('change',e=>{const v=+e.target.value;if(!(v>=500)){renderPwbar();return}pwSet('h3',v)});
+$('#pw_len').addEventListener('change',e=>{const v=+e.target.value;if(!(v>=100)){renderPwbar();return}pwSet('len',v)});
 /* ---------------- 간격 계산 ---------------- */
 const DIR4={L:{ax:'x',s:-1},R:{ax:'x',s:1},U:{ax:'y',s:-1},D:{ax:'y',s:1}};
 const toUV=(f,ax)=>ax==='x'?{u0:f.x,u1:f.x+f.w,v0:f.y,v1:f.y+f.h}:{u0:f.y,u1:f.y+f.h,v0:f.x,v1:f.x+f.w};
@@ -1420,14 +1605,15 @@ function nearest(f,dir,ex,wallOnly){
   for(const b of S.beams){if(ex&&ex.has(b.id))continue;rect(beamRect(b),'beam')}}
   const P=S.poly,lo=R.v0+1,hi=R.v1-1,SG=P.map((a,i)=>[a,P[(i+1)%P.length],'wall']);
   if(isDeckSheet())for(const dk of S.decks||[]){const c=corners(dk);for(let i=0;i<4;i++)SG.push([c[i],c[(i+1)%4],'deck'])}
+  for(const q of partSegs()){if(ex&&ex.has(q.id))continue;const Q=segQuad(q);for(let i=0;i<4;i++)SG.push([Q[i],Q[(i+1)%4],'part'])}
   for(const[a,b,kd]of SG){const X=ax==='x';const ua=X?a[0]:a[1],va=X?a[1]:a[0],ub=X?b[0]:b[1],vb=X?b[1]:b[0];
     let t0=0,t1=1;if(Math.abs(vb-va)<1e-9){if(va<lo||va>hi)continue}else{let ta=(lo-va)/(vb-va),tb=(hi-va)/(vb-va);if(ta>tb)[ta,tb]=[tb,ta];t0=Math.max(0,ta);t1=Math.min(1,tb);if(t0>t1)continue}
     const c1=ua+(ub-ua)*t0,c2=ua+(ub-ua)*t1,mx=Math.max(c1,c2),mn=Math.min(c1,c2);
     if(s<0){if(mx<=R.u0+1)take(R.u0-mx,kd,mx)}else if(mn>=R.u1-1)take(mn-R.u1,kd,mn)}
   best.ax=ax;best.s=s;best.face=s<0?R.u0:R.u1;best.vm=(R.v0+R.v1)/2;return best;
 }
-const KIND={wall:'벽',beam:'H빔',rack:'랙',deck:'데크 끝',share:'기둥 공유'};
-const limitOf=k=>k==='share'?0:k==='wall'||k==='deck'?wallMin():k==='beam'?S.lay.col:S.lay.gap;
+const KIND={wall:'벽',beam:'H빔',rack:'랙',deck:'데크 끝',share:'기둥 공유',part:'가벽'};
+const limitOf=k=>k==='share'?0:k==='wall'||k==='deck'||k==='part'?wallMin():k==='beam'?S.lay.col:S.lay.gap;
 function rackDims(f,r,px,info){const uw=Math.min(rUW(r),r.W*0.3),T=14*px,rot=r.rot?1:0,fs=13*px;let s='';
   const D=(ax,ay,bx,by,nx,ny,off,lb,cls)=>{const g=dimG(ax,ay,bx,by,nx,ny,off,T*0.2,T);return `<g class="rdim${cls?' '+cls:''}">${ln(...g.e1[0],...g.e1[1])}${ln(...g.e2[0],...g.e2[1])}${ln(g.A[0],g.A[1],g.B[0],g.B[1])}${ln(...g.t1[0],...g.t1[1])}${ln(...g.t2[0],...g.t2[1])}<text x="${R1(g.tx)}" y="${R1(g.ty)}" font-size="${R1(fs)}" transform="rotate(${R1(g.ang)} ${R1(g.tx)} ${R1(g.ty)})">${esc(lb)}</text></g>`};
   if(!rot){s+=D(f.x,f.y,f.x+f.w,f.y,0,-1,T*(info?2.2:1.2),`외경 ${fmt(f.w)}`);if(info)s+=D(f.x+uw,f.y+f.h,f.x+f.w-uw,f.y+f.h,0,1,T*2.2,`내경 ${fmt(f.w-2*uw)}`,'in');s+=D(f.x+f.w,f.y,f.x+f.w,f.y+f.h,1,0,T*(info?2.2:1.2),`폭 ${fmt(f.h)}`)}
@@ -1530,7 +1716,8 @@ function renderPreview(){
     const sz=[...st.groups.entries()].sort((a,b)=>b[1]-a[1]);
     h+=`<section><p class="pvh">랙 규격별 수량</p><table class="kvt">${sz.map(([k,n])=>{const[dm,l]=k.split('|');return `<tr><th>${dm} · ${l}단</th><td>${fmt(n)}칸</td></tr>`}).join('')}</table></section>`;
   }else h+=`<p class="note">설치된 랙이 없습니다. 랙을 놓은 뒤 다시 확인하세요.</p>`;
-  if((S.doors||[]).length){const n=S.poly.length;h+=`<section><p class="pvh">출입구</p><div class="rtw"><table class="rt"><thead><tr><th>번호</th><th>종류</th><th>가로×높이</th><th>벽</th><th>모서리에서</th><th>모서리까지</th></tr></thead><tbody>${S.doors.map((d,k)=>{const g=doorGeo(d);return `<tr><td>출입구${k+1}</td><td>${(KN[d.kind]||'여닫이문')}</td><td>${fmt(d.w)}×${fmt(d.h)}</td><td>P${g.i+1}→P${(g.i+1)%n+1}</td><td>${fmt(g.s0)}</td><td>${fmt(g.s1)}</td></tr>`}).join('')}</tbody></table></div></section>`}
+  if((S.rooms||[]).length||(S.pwalls||[]).length){const pt=partTotals();h+=`<section><p class="pvh">공간 · 가벽</p>${(S.rooms||[]).length?`<div class="rtw"><table class="rt"><thead><tr><th>이름</th><th>종류</th><th>외곽 가로×세로</th><th>내부 유효</th><th>면적</th><th>벽체</th><th>문</th></tr></thead><tbody>${S.rooms.map(m=>{const ar=roomArea(m),inn=roomInner(m);return `<tr><td>${esc(m.name||'공간')}</td><td>${(ROOMK[m.kind]||ROOMK.etc).n}</td><td>${fmt(m.w)}×${fmt(m.h)}</td><td>${fmt(inn.w)}×${fmt(inn.h)}</td><td>${ar.toFixed(1)}㎡ · ${pyeong(ar).toFixed(1)}평</td><td>${(PMAT[m.mat]||PMAT.ure)} ${fmt(m.t)}T</td><td>${roomDoors(m).length}</td></tr>`}).join('')}</tbody></table></div>`:''}<table class="kvt" style="margin-top:8px"><tr><th>가벽 총 길이</th><td>${fmt(pt.len)} mm</td></tr><tr><th>가벽 면적 (길이×높이)</th><td>${(pt.ar/1e6).toFixed(1)} ㎡</td></tr>${[...pt.by.entries()].map(([k,v])=>`<tr><th>${esc(k)}</th><td>${fmt(v)} mm</td></tr>`).join('')}</table></section>`}
+  if((S.doors||[]).length){const n=S.poly.length;h+=`<section><p class="pvh">출입구</p><div class="rtw"><table class="rt"><thead><tr><th>번호</th><th>종류</th><th>가로×높이</th><th>벽</th><th>모서리에서</th><th>모서리까지</th></tr></thead><tbody>${S.doors.map((d,k)=>{const g=doorGeo(d);return `<tr><td>출입구${k+1}</td><td>${(KN[d.kind]||'여닫이문')}</td><td>${fmt(d.w)}×${fmt(d.h)}</td><td>${g.wall}</td><td>${g.nA} ${fmt(g.s0)}</td><td>${g.nB} ${fmt(g.s1)}</td></tr>`}).join('')}</tbody></table></div></section>`}
   const ne=[...AN2.values()].filter(x=>x.lvl==='err').length;if(ne)h=`<div class="pvwarn">겹치거나 벽 밖에 있는 랙이 ${ne}개 있습니다. 내보내기 전에 고치세요.</div>`+h;
   $('#pvSide').innerHTML=h;
 }
@@ -1585,7 +1772,8 @@ function renderDbar(){
   set('db_w',Math.round(src.w));set('db_h',Math.round(src.h));set('db_k',src.kind||'swing');set('db_o',src.out?'out':'in');
   $('#dbOL').hidden=src.kind==='shutter';$('#dbOL').firstChild.textContent=src.kind==='slide'?'레일':'열림';$('#dbFlip').hidden=!d||src.kind==='shutter';$('#dbFlip').textContent=src.kind==='slide'?'열리는 쪽 반대로':'경첩 반대로';
   const pos=$('#dbPos');pos.classList.toggle('on',!!d);
-  if(d){const g=doorGeo(d),n=S.poly.length;$('#dbA').textContent='P'+(g.i+1);$('#dbB').textContent='P'+((g.i+1)%n+1);set('db_s0',Math.round(g.s0));set('db_s1',Math.round(g.s1));$('#dbNote').textContent=`벽 길이 ${fmt(g.len)}`}
+  {const o=$('#db_o').options,hz=d&&d.host;o[0].textContent=hz&&hz.startsWith('r:')?'창고 쪽으로':hz?'앞쪽으로':'안쪽으로';o[1].textContent=hz&&hz.startsWith('r:')?'공간 안쪽으로':hz?'뒤쪽으로':'바깥쪽으로'}
+  if(d){const g=doorGeo(d);$('#dbA').textContent=g.nA;$('#dbB').textContent=g.nB;set('db_s0',Math.round(g.s0));set('db_s1',Math.round(g.s1));$('#dbNote').textContent=`${g.wall} · 벽 길이 ${fmt(g.len)}`}
   else $('#dbNote').textContent='기본 1,000×2,000 · 벽 가까이를 누르세요';
   if(d&&tool==='door')$('#dbNote').textContent+=' · 다른 벽을 누르면 새 출입구 추가';
 }
@@ -1601,8 +1789,8 @@ $('#db_s1').addEventListener('change',e=>{const v=+e.target.value,d=dbTarget();i
 function doorGapSVG(g,px){
   let s='';const tk=5*px,n=S.poly.length,mk=(p,q,t)=>{const m=[(p[0]+q[0])/2,(p[1]+q[1])/2],o=[m[0]+g.nin[0]*14*px,m[1]+g.nin[1]*14*px];return `<g class="gd">${ln(p[0],p[1],q[0],q[1])}${ln(p[0]-g.nin[0]*tk,p[1]-g.nin[1]*tk,p[0]+g.nin[0]*tk,p[1]+g.nin[1]*tk,'gk')}${ln(q[0]-g.nin[0]*tk,q[1]-g.nin[1]*tk,q[0]+g.nin[0]*tk,q[1]+g.nin[1]*tk,'gk')}${txt(o[0],o[1],t,12*px,'','middle')}</g>`};
   const off=v=>[v[0]+g.nin[0]*22*px,v[1]+g.nin[1]*22*px];
-  if(g.s0>0.5)s+=mk(off(g.a),off(g.p1),`P${g.i+1}에서 ${fmt(g.s0)}`);
-  if(g.s1>0.5)s+=mk(off(g.p2),off(g.b),`P${(g.i+1)%n+1}까지 ${fmt(g.s1)}`);
+  if(g.s0>0.5)s+=mk(off(g.a),off(g.p1),`${g.nA}에서 ${fmt(g.s0)}`);
+  if(g.s1>0.5)s+=mk(off(g.p2),off(g.b),`${g.nB}까지 ${fmt(g.s1)}`);
   return s;
 }
 
@@ -1616,7 +1804,7 @@ function normSheets(st){if(!Array.isArray(st.sheets)||!st.sheets.length)st.sheet
   st.cur=clamp(st.cur|0,0,st.sheets.length-1);st.racks=st.sheets[st.cur].racks;st.texts=st.sheets[st.cur].texts;st.decks=st.decks||[];st.elev=st.elev||{a:0,all:true,dims:true};st.txt=st.txt||{size:5,font:'sans',bold:false,color:'ink'};return st}
 function withSheet(k,fn){link();const kr=S.racks,kt=S.texts,kc=S.cur;S.cur=k;S.racks=S.sheets[k].racks;S.texts=S.sheets[k].texts;try{return fn()}finally{S.cur=kc;S.racks=kr;S.texts=kt}}
 async function withSheetA(k,fn){link();const kr=S.racks,kt=S.texts,kc=S.cur;S.cur=k;S.racks=S.sheets[k].racks;S.texts=S.sheets[k].texts;try{return await fn()}finally{S.cur=kc;S.racks=kr;S.texts=kt}}
-function setSheet(k){if(k===S.cur||!S.sheets[k])return;link();S.cur=k;S.racks=S.sheets[k].racks;S.texts=S.sheets[k].texts;Sel.r.clear();Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;pend=null;ghost=null;commit();render();renderSel()}
+function setSheet(k){if(k===S.cur||!S.sheets[k])return;link();S.cur=k;S.racks=S.sheets[k].racks;S.texts=S.sheets[k].texts;Sel.r.clear();Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.m=null;Sel.w=null;pend=null;ghost=null;commit();render();renderSel()}
 function addSheet(kind){link();const n=S.sheets.filter(x=>x.kind===kind).length,name=kind==='deck'?(n?`데크층 ${n+1}`:'데크층'):`1층 ${n+1}안`;
   S.sheets.push({id:uid(),name,kind,racks:[],texts:[]});setSheet(S.sheets.length-1);
   toast(kind==='deck'&&!(S.decks||[]).length?'데크가 아직 없습니다. 데크 도구(K)로 데크 영역을 먼저 그리세요.':`'${name}' 페이지를 만들었습니다. 벽·출입구·H빔·데크는 모든 페이지가 함께 씁니다.`)}
@@ -1695,6 +1883,7 @@ function elevSVG(a){
   const P=S.poly,us=P.map(U),ds=P.map(Dd),u0=Math.min(...us),u1=Math.max(...us),dMin=Math.min(...ds),dMax=Math.max(...ds),C=+S.ceil,T=+S.wallT||0,Wd=u1-u0;
   const ts=clamp(Math.hypot(Wd,C)/70,80,700),Y=z=>-z,dop=d=>(1-0.45*clamp((d-dMin)/Math.max(1,dMax-dMin),0,1)).toFixed(2),prj=cs=>{const uu=cs.map(U),dd=cs.map(Dd);return{a:Math.min(...uu),b:Math.max(...uu),d:Math.min(...dd)}};
   const it=[];for(const q of allRacks())it.push({k:'rack',...prj(corners(q.f)),q});for(const bm of S.beams)it.push({k:'beam',...prj(corners(beamRect(bm))),bm});(S.decks||[]).forEach((dk,i)=>it.push({k:'deck',...prj(corners(dk)),dk,i}));
+  for(const q of partSegs())it.push({k:'pw',...prj(segQuad(q)),q});
   it.sort((x,y)=>y.d-x.d);
   const hp=R1(ts*0.35),defs=`<pattern id="eh" patternUnits="userSpaceOnUse" width="${hp}" height="${hp}" patternTransform="rotate(45)"><line class="hl" x1="0" y1="0" x2="0" y2="${hp}"/></pattern><pattern id="edh" patternUnits="userSpaceOnUse" width="${R1(ts*0.25)}" height="${R1(ts*0.25)}" patternTransform="rotate(-45)"><line class="edhl" x1="0" y1="0" x2="0" y2="${R1(ts*0.25)}"/></pattern>`;
   let s=rc(u0,Y(C),Wd,C,'ebg');
@@ -1702,16 +1891,21 @@ function elevSVG(a){
   const door=(x,near)=>{const A=U(x.g.p1),B=U(x.g.p2),l=Math.min(A,B),w=Math.abs(B-A),h=Math.min(x.d.h,C);if(w<1)return '';let o=rc(l,Y(h),w,h,near?'edn':'edr');
     if(!near){if(x.d.kind==='slide')o+=ln(l+w/2,0,l+w/2,Y(h),'edl');else if(x.d.kind==='shutter'){for(let z=250;z<h;z+=250)o+=ln(l,Y(z),l+w,Y(z),'edl')}else{const hu=U(x.d.flip?x.g.p2:x.g.p1),ou=U(x.d.flip?x.g.p1:x.g.p2);o+=`<polyline class="edl" points="${R1(ou)},0 ${R1(hu)},${R1(Y(h/2))} ${R1(ou)},${R1(Y(h))}"/>`}}
     return o+txt(l+w/2,Y(h)-ts*0.45,`출입구${x.i+1}${near?' (앞벽)':''}`,ts*0.4,'edt','middle')};
-  for(const x of DG)if(x.g.N[0]*v[0]+x.g.N[1]*v[1]>0.3)s+=door(x,false);
+  for(const x of DG)if(x.g.i>=0&&x.g.N[0]*v[0]+x.g.N[1]*v[1]>0.3)s+=door(x,false);
   s+=ln(u0,Y(C),u1,Y(C),'eceil');
+  elevSVG._seen=new Set();elevSVG._lab='';
   for(const x of it){
     if(x.k==='beam')s+=rc(x.a,Y(C),x.b-x.a,C,'ebmbg')+`<g opacity="${dop(x.d)}">${rc(x.a,Y(C),x.b-x.a,C,'ebm')}</g>`;
     else if(x.k==='deck'){const dk=x.dk;s+=`<g opacity="${dop(x.d)}">${rc(x.a,Y(dk.z),x.b-x.a,dk.t,'edk')}${ln(x.a,Y(dk.z+1100),x.b,Y(dk.z+1100),'erail')}${ln(x.a,Y(dk.z+550),x.b,Y(dk.z+550),'erail')}${ln(x.a,Y(dk.z),x.a,Y(dk.z+1100),'erail')}${ln(x.b,Y(dk.z),x.b,Y(dk.z+1100),'erail')}</g>`+txt(x.a+ts*0.3,Y(dk.z+1100)-ts*0.35,`데크${x.i+1} · 두께 ${fmt(dk.t)}`,ts*0.4,'edkl','start')}
+    else if(x.k==='pw'){const q=x.q,h=Math.min(q.H,C),face=Math.abs(q.N[0]*v[0]+q.N[1]*v[1]);s+=`<g opacity="${dop(x.d)}">`+rc(x.a,Y(h),x.b-x.a,h,'epw'+(face<0.5?' side':''));
+      if(face>=0.5)for(const dd of DG)if(dd.g.seg&&dd.g.seg.key===q.key){const A=U(dd.g.p1),B=U(dd.g.p2),l=Math.min(A,B),w=Math.abs(B-A),dh=Math.min(dd.d.h,h);if(w>1)s+=rc(l,Y(dh),w,dh,'edr')+txt(l+w/2,Y(dh)-ts*0.45,`출입구${dd.i+1}`,ts*0.4,'edt','middle')}
+      s+='</g>';if(face>=0.5&&q.kind==='room'&&x.b-x.a>ts*4&&!x.lab){const rm=roomById(q.id);if(rm&&!elevSVG._seen.has(rm.id)){elevSVG._seen.add(rm.id);elevSVG._lab+=txt((x.a+x.b)/2,Y(h)-ts*0.5,rm.name||'공간',ts*0.5,'epwl','middle')}}}
     else s+=eRack(x,R,dop(x.d));
   }
+  s+=elevSVG._lab;
   s+=rc(u0-T,Y(C)-T,T,C+T,'ewall')+rc(u1,Y(C)-T,T,C+T,'ewall')+rc(u0-T,Y(C)-T,Wd+2*T,T,'ewall');
   s+=rc(u0-T-ts*2,0,Wd+2*T+ts*4,ts*0.8,'egr')+ln(u0-T-ts*2,0,u1+T+ts*2,0,'efl');
-  for(const x of DG)if(x.g.N[0]*v[0]+x.g.N[1]*v[1]<-0.3)s+=door(x,true);
+  for(const x of DG)if(x.g.i>=0&&x.g.N[0]*v[0]+x.g.N[1]*v[1]<-0.3)s+=door(x,true);
   if(S.elev.dims){
     s+=dimSVG(dimG(u0,0,u1,0,0,1,ts*2.4,ts*1.0,ts),`전체 ${fmt(Wd)}`,ts*0.5,'dim tot');
     s+=dimSVG(dimG(u0-T,0,u0-T,Y(C),-1,0,ts*2.2,ts*0.3,ts),`천장 ${fmt(C)}`,ts*0.45);
@@ -1775,7 +1969,7 @@ function showCtx(x,y,id,w){CTXID=id;CTXW=w||null;const m=$('#ctx');const ci=$('#
 function hideCtx(){$('#ctx').hidden=true}
 function clearRInfo(){if(RINFO){RINFO=null;renderOv()}}
 addEventListener('pointerdown',e=>{if(!$('#ctx').hidden&&!e.target.closest('#ctx'))hideCtx();if(RINFO&&!e.target.closest('#ctx')&&e.button!==2)clearRInfo()},true);
-$('#ctx').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;hideCtx();if(b.dataset.c==='txt'){if(CTXW)newText(CTXW.view,CTXW.x,CTXW.y);return}if(b.dataset.c==='shj'||b.dataset.c==='shs'){const ids=Sel.r.has(CTXID)?new Set(Sel.r):new Set([CTXID]);(b.dataset.c==='shj'?shareJoin:shareSplit)(ids);if(!$('#rd').hidden)renderRD();return}if(b.dataset.c==='rd')openRD(CTXID);else{if(viewEl)setView('2d');setTool('select');Sel.r=new Set([CTXID]);Sel.b=null;Sel.d=null;Sel.t=null;renderSel();render()}});
+$('#ctx').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;hideCtx();if(b.dataset.c==='txt'){if(CTXW)newText(CTXW.view,CTXW.x,CTXW.y);return}if(b.dataset.c==='shj'||b.dataset.c==='shs'){const ids=Sel.r.has(CTXID)?new Set(Sel.r):new Set([CTXID]);(b.dataset.c==='shj'?shareJoin:shareSplit)(ids);if(!$('#rd').hidden)renderRD();return}if(b.dataset.c==='rd')openRD(CTXID);else{if(viewEl)setView('2d');setTool('select');Sel.r=new Set([CTXID]);Sel.b=null;Sel.d=null;Sel.t=null;Sel.m=null;Sel.w=null;renderSel();render()}});
 
 /* ---------------- 랙 상세도 ---------------- */
 function sigOf(r){return [r.W,r.D,r.H,r.L,rUW(r),rBT(r),beamTops(r).join(',')].join('|')}
@@ -1952,8 +2146,8 @@ function syncTBox(){const t=TSEL&&ntById(TSEL.id);if(!t)return;const el=$('#tb_s
 function placeTBox(){const B=$('#tBox');if(B.hidden||!TSEL)return;const t=ntById(TSEL.id);if(!t){closeTBox(true);return}const el=vSvg(TSEL.view);if(!el||!el.getScreenCTM())return;
   let wx=t.x;if(TSEL.view==='rd'){const vt=viewTexts('rd').find(q=>q.id===t.id);if(vt)wx=vt.x}const pt=el.createSVGPoint();pt.x=wx;pt.y=t.y;const p=pt.matrixTransform(el.getScreenCTM()),fs=t.size*vScale(TSEL.view)*(el.getScreenCTM().a||1),bw=B.offsetWidth,bh=B.offsetHeight;
   let top=p.y+fs*0.8+10;if(top+bh>innerHeight-8)top=p.y-fs*0.8-bh-10;B.style.left=clamp(p.x-bw/2,8,innerWidth-bw-8)+'px';B.style.top=clamp(top,8,innerHeight-bh-8)+'px'}
-function closeTBox(silent){const B=$('#tBox');if(B.hidden)return;B.hidden=true;const sel=TSEL;TSEL=null;if(!sel)return;const t=ntById(sel.id);if(t){t.s=(t.s||'').trim();if(!t.s){if(sel.view==='plan'){S.texts=S.texts.filter(q=>q.id!==t.id);Sel.t=null}else S.ntexts=S.ntexts.filter(q=>q.id!==t.id)}}commit();if(!silent)renderView(sel.view)}
-function delText(){if(!TSEL)return;const id=TSEL.id,v=TSEL.view;$('#tBox').hidden=true;TSEL=null;if(v==='plan'){S.texts=S.texts.filter(q=>q.id!==id);Sel.t=null}else S.ntexts=(S.ntexts||[]).filter(q=>q.id!==id);commit();renderView(v);if(v==='plan')renderSel();toast('텍스트를 삭제했습니다.')}
+function closeTBox(silent){const B=$('#tBox');if(B.hidden)return;B.hidden=true;const sel=TSEL;TSEL=null;if(!sel)return;const t=ntById(sel.id);if(t){t.s=(t.s||'').trim();if(!t.s){if(sel.view==='plan'){S.texts=S.texts.filter(q=>q.id!==t.id);Sel.t=null;Sel.m=null;Sel.w=null}else S.ntexts=S.ntexts.filter(q=>q.id!==t.id)}}commit();if(!silent)renderView(sel.view)}
+function delText(){if(!TSEL)return;const id=TSEL.id,v=TSEL.view;$('#tBox').hidden=true;TSEL=null;if(v==='plan'){S.texts=S.texts.filter(q=>q.id!==id);Sel.t=null;Sel.m=null;Sel.w=null}else S.ntexts=(S.ntexts||[]).filter(q=>q.id!==id);commit();renderView(v);if(v==='plan')renderSel();toast('텍스트를 삭제했습니다.')}
 function startPlace(view){closeTBox();TPLACE=view;document.body.classList.add('placing');toast('텍스트를 넣을 곳을 누르세요 (Esc 취소)')}
 function endPlace(){TPLACE=null;document.body.classList.remove('placing')}
 $('#tb_f').innerHTML=Object.entries(FONTS).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join('');
@@ -2015,7 +2209,7 @@ $('#bPanel').onclick=()=>{if(matchMedia('(max-width:820px)').matches)document.bo
 $('#bPanelClose').onclick=()=>document.body.classList.remove('panel-open');
 /* ---------------- 단축키 ---------------- */
 const CMDS=[
- ['tSelect','도구','선택·이동 도구','2d',['V']],['tRack','도구','랙 놓기 도구','2d',['A']],['tBeam','도구','H빔 도구','2d',['B']],['tDoor','도구','출입구 도구','2d',['D']],['tText','도구','텍스트 넣기 (모든 도면)','g',['T']],
+ ['tSelect','도구','선택·이동 도구','2d',['V']],['tRack','도구','랙 놓기 도구','2d',['A']],['tBeam','도구','H빔 도구','2d',['B']],['tDoor','도구','출입구 도구','2d',['D']],['tRoom','도구','공간·가벽 만들기 (워크인 등)','2d',['Q']],['tPwall','도구','가벽 그리기','2d',['E']],['tText','도구','텍스트 넣기 (모든 도면)','g',['T']],
  ['tWall','도구','벽 편집 도구','2d',['W']],['tMeasure','도구','거리 재기 도구','2d',['M']],['tSpawn','도구','3D 시작점 도구','2d',['P']],
  ['undo','편집','되돌리기','2d',['Ctrl+Z']],['redo','편집','다시 실행','2d',['Ctrl+Y','Ctrl+Shift+Z']],
  ['rotate','편집','회전 (랙 · H빔 90° · 출입구 방향)','2d',['R']],['dup','편집','복제','2d',['Ctrl+D']],['del','편집','삭제','2d',['Del','Backspace']],
@@ -2051,11 +2245,11 @@ const keysOf=id=>(KEYS[id]||[]).filter(Boolean).map(keyDisp).join(' / ');
 const HOLD={},H3={f3:'f',b3:'b',l3:'l',r3:'r',tl3:'tl',tr3:'tr',fast3:'shift'};
 function setHold(id,v){if(HOLD[id]===v)return;HOLD[id]=v;if(id==='pan'){spaceDown=v;$('#cv').classList.toggle('spacepan',v)}else if(H3[id]&&T)T.keys[H3[id]]=v}
 const grid=()=>+S.grid||100;
-const RUN={shareJoin:()=>{if(Sel.r.size)shareJoin(Sel.r);else toast('먼저 랙을 선택하세요.')},shareSplit:()=>{if(Sel.r.size)shareSplit(Sel.r);else toast('먼저 랙을 선택하세요.')},tSelect:()=>setTool('select'),tRack:()=>setTool('rack'),tBeam:()=>setTool('beam'),tDoor:()=>setTool('door'),tWall:()=>setTool('wall'),tMeasure:()=>setTool('measure'),tSpawn:()=>setTool('spawn'),goods:()=>toggleGoods(),tDeck:()=>setTool('deck'),tText:()=>{if(viewEl)startPlace('elev');else if(!view3d)setTool('text')},vElev:()=>setView('elev'),shNext:()=>setSheet((S.cur+1)%S.sheets.length),shPrev:()=>setSheet((S.cur-1+S.sheets.length)%S.sheets.length),
+const RUN={tRoom:()=>setTool('room'),tPwall:()=>setTool('pwall'),shareJoin:()=>{if(Sel.r.size)shareJoin(Sel.r);else toast('먼저 랙을 선택하세요.')},shareSplit:()=>{if(Sel.r.size)shareSplit(Sel.r);else toast('먼저 랙을 선택하세요.')},tSelect:()=>setTool('select'),tRack:()=>setTool('rack'),tBeam:()=>setTool('beam'),tDoor:()=>setTool('door'),tWall:()=>setTool('wall'),tMeasure:()=>setTool('measure'),tSpawn:()=>setTool('spawn'),goods:()=>toggleGoods(),tDeck:()=>setTool('deck'),tText:()=>{if(viewEl)startPlace('elev');else if(!view3d)setTool('text')},vElev:()=>setView('elev'),shNext:()=>setSheet((S.cur+1)%S.sheets.length),shPrev:()=>setSheet((S.cur-1+S.sheets.length)%S.sheets.length),
   el0:()=>setElevA(0),el90:()=>setElevA(90),el180:()=>setElevA(180),el270:()=>setElevA(270),elL:()=>setElevA(S.elev.a-15),elR:()=>setElevA(S.elev.a+15),elFit:()=>evFit(),elZi:()=>$('#elZi').click(),elZo:()=>$('#elZo').click(),elDims:()=>$('#el_dims').click(),elAll:()=>$('#el_all').click(),
   undo,redo,rotate:()=>{rotSel();if(tool==='rack'&&ghost){ghost=null;renderOv()}},dup,del,confirm:()=>{if(pend)confirmPend()},
-  cancel:()=>{if(pend){cancelPend();return}Sel.r.clear();Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.v=null;meas=null;marquee=null;setTool('select');render()},
-  selAll:()=>{setTool('select');Sel.r=new Set(S.racks.map(r=>r.id));Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;renderSel();render()},
+  cancel:()=>{if(pend){cancelPend();return}if(PWD||ROOMA){PWD=null;ROOMA=null;ghost=null;renderOv();renderSel();return}Sel.r.clear();Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.m=null;Sel.w=null;Sel.v=null;meas=null;marquee=null;setTool('select');render()},
+  selAll:()=>{setTool('select');Sel.r=new Set(S.racks.map(r=>r.id));Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.m=null;Sel.w=null;renderSel();render()},
   mU:()=>nudge(0,-grid()),mD:()=>nudge(0,grid()),mL:()=>nudge(-grid(),0),mR:()=>nudge(grid(),0),MU:()=>nudge(0,-1000),MD:()=>nudge(0,1000),ML:()=>nudge(-1000,0),MR:()=>nudge(1000,0),
   zIn:()=>zoomC(1.25),zOut:()=>zoomC(0.8),fitRoom:()=>fitView('room'),fitSheet:()=>fitView('sheet'),lock:()=>$('#bLock').click(),
   auto:()=>$('#bAuto').click(),bgrid:()=>$('#bBeamGrid').click(),reset:()=>askReset(),
@@ -2086,7 +2280,7 @@ addEventListener('keydown',e=>{
 addEventListener('keyup',e=>{const base=baseKey(e);for(const c of CMDS)if(c.hold&&HOLD[c.id]&&KEYS[c.id].some(k=>baseOf(k)===base))setHold(c.id,false)});
 addEventListener('blur',()=>{for(const id in HOLD)setHold(id,false)});
 function updTitles(){
-  const tm={select:'tSelect',rack:'tRack',beam:'tBeam',door:'tDoor',deck:'tDeck',text:'tText',wall:'tWall',measure:'tMeasure',spawn:'tSpawn'};
+  const tm={select:'tSelect',rack:'tRack',beam:'tBeam',door:'tDoor',room:'tRoom',pwall:'tPwall',deck:'tDeck',text:'tText',wall:'tWall',measure:'tMeasure',spawn:'tSpawn'};
   $$('#tools button').forEach(b=>{const c=CM[tm[b.dataset.tool]];if(c){const k=keysOf(c.id);b.title=c.label+(k?` (${k})`:'')}});
   [['bSave','openSave'],['bGoods','goods'],['bUndo','undo'],['bRedo','redo'],['bRot','rotate'],['bDup','dup'],['bDel','del'],['bView','preview'],['bExport','export'],['bPanel','panel'],['bFull','full'],['bKeys','keys'],['zIn','zIn'],['zOut','zOut'],['zRoom','fitRoom'],['zSheet','fitSheet']].forEach(([el,id])=>{const b=$('#'+el);if(b){const k=keysOf(id);b.title=CM[id].label+(k?` (${k})`:'')}});
   $$('[data-view]').forEach(b=>{const id={'3d':'v3d',elev:'vElev','2d':'v2d'}[b.dataset.view],k=keysOf(id);b.title=CM[id].label+(k?` (${k})`:'')});
@@ -2189,6 +2383,14 @@ function build3D(){
     for(const yy of [1.1,0.55])RL.push([x+w/2,top+yy,z,w,0.05,0.05],[x+w/2,top+yy,z+h,w,0.05,0.05],[x,top+yy,z+h/2,0.05,0.05,h],[x+w,top+yy,z+h/2,0.05,0.05,h]);
     for(let i=0;i<=nx;i++)for(const zz of [z,z+h])RL.push([x+w*i/nx,top+0.55,zz,0.05,1.1,0.05]);for(let j=0;j<=nz;j++)for(const xx of [x,x+w])RL.push([xx,top+0.55,z+h*j/nz,0.05,1.1,0.05])});
   for(let x=bb.minX+3;x<bb.maxX;x+=6)for(let z=bb.minY+2.5;z<bb.maxY;z+=5)if(pip(x,z,P))LT.push([x,ceil-0.35,z,1.4,0.06,0.2]);
+  {const mm=new THREE.MeshLambertMaterial({color:0x5d6670,transparent:true,opacity:0.35}),D2=(S.doors||[]).map(d=>({d,g:doorGeo(d)}));
+   for(const q of partSegs()){const a=[q.a[0]/1000,q.a[1]/1000],b=[q.b[0]/1000,q.b[1]/1000],len=q.len/1000;if(len<0.05)continue;const u=[(b[0]-a[0])/len,(b[1]-a[1])/len],n=q.N,T3=q.T/1000,H3=Math.min(q.H,S.ceil)/1000,ang=-Math.atan2(u[1],u[0]),mat=q.mat==='mesh'?mm:wm;
+     const bx=(t0,t1,y0,y1,th,off,m)=>{const L0=t1-t0;if(L0<=0.001||y1-y0<=0.001)return;const c=(t0+t1)/2,o=new THREE.Mesh(new THREE.BoxGeometry(L0,y1-y0,th),m);o.position.set(a[0]+u[0]*c+n[0]*off,(y0+y1)/2,a[1]+u[1]*c+n[1]*off);o.rotation.y=ang;root.add(o)};
+     const ds=D2.filter(x=>x.g.seg&&x.g.seg.key===q.key).map(x=>({t0:x.g.s0/1000,t1:(x.g.s0+x.g.w)/1000,h:Math.min(x.d.h/1000,H3),d:x.d,g:x.g})).sort((p1,p2)=>p1.t0-p2.t0);
+     let cur=0;const sg=[];for(const x of ds){sg.push([cur,x.t0]);cur=x.t1}sg.push([cur,len]);sg.forEach(([t0,t1])=>bx(t0,t1,0,H3,T3,T3/2,mat));
+     for(const x of ds){bx(x.t0,x.t1,x.h,H3,T3,T3/2,mat);bx(x.t0-0.05,x.t0,0,x.h,T3+0.02,T3/2,dfm);bx(x.t1,x.t1+0.05,0,x.h,T3+0.02,T3/2,dfm);bx(x.t0,x.t1,x.h-0.05,x.h,T3+0.02,T3/2,dfm);
+       if(x.d.kind==='shutter')bx(x.t0,x.t1,x.h-0.45,x.h-0.05,T3+0.06,T3/2,dm2);else if(x.d.kind==='slide'){const w=x.t1-x.t0,o=x.d.out?T3+0.05:-0.05;if(x.d.flip)bx(x.t0-w,x.t0,0,x.h-0.05,0.04,o,dm1);else bx(x.t1,x.t1+w,0,x.h-0.05,0.04,o,dm1)}else bx(x.t0,x.t1,0,x.h-0.05,0.05,T3/2,dm1)}
+     for(let k=0;k<=Math.ceil(len/0.3);k++){const t=Math.min(len,k*0.3);if(ds.some(x=>t>x.t0+0.08&&t<x.t1-0.08))continue;const cx=a[0]+u[0]*t+n[0]*T3/2,cz=a[1]+u[1]*t+n[1]*T3/2;T.obs.push({x:cx-0.16,y:cz-0.16,w:0.32,h:0.32})}}}
   const unit=new THREE.BoxGeometry(1,1,1),dm=new THREE.Object3D();
   const inst=(arr,mat,useCol)=>{if(!arr.length)return;const m=new THREE.InstancedMesh(unit,mat,arr.length);arr.forEach((a,i)=>{dm.position.set(a[0],a[1],a[2]);dm.scale.set(a[3],a[4],a[5]);dm.updateMatrix();m.setMatrixAt(i,dm.matrix);if(useCol)m.setColorAt(i,new THREE.Color(a[6]))});m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;root.add(m)};
   inst(UP,new THREE.MeshLambertMaterial({color:0x1f5fa8}));inst(BM,new THREE.MeshLambertMaterial({color:0xe8590c}));inst(PL,new THREE.MeshLambertMaterial({color:0xa98451}));
@@ -2266,6 +2468,11 @@ function exportDXF(){
   S.racks.forEach(r=>{const f=fp(r),ft=Math.min(90,r.W*0.05);rect(f,'RACK',5);if(!r.rot){rect({x:f.x,y:f.y,w:ft,h:f.h},'RACK',5);rect({x:f.x+f.w-ft,y:f.y,w:ft,h:f.h},'RACK',5)}else{rect({x:f.x,y:f.y,w:f.w,h:ft},'RACK',5);rect({x:f.x,y:f.y+f.h-ft,w:f.w,h:ft},'RACK',5)}
     text(f.x+f.w/2,f.y+f.h/2,Math.min(ts*0.55,f.w*0.22,f.h*0.4),lab.get(r.id)||'','RACK-TEXT',5)});
   S.beams.forEach(b=>poly(hPts(b.x,b.y,b.w,b.h),'HBEAM',1));
+  {const D2=(S.doors||[]).map((d,k)=>({d,k,g:doorGeo(d)})),sl=(a,b,gaps,ly,c)=>{const len=Math.hypot(b[0]-a[0],b[1]-a[1])||1,u=[(b[0]-a[0])/len,(b[1]-a[1])/len],pr=p=>(p[0]-a[0])*u[0]+(p[1]-a[1])*u[1];let cur=0;const gs=gaps.map(([p,q])=>[pr(p),pr(q)].sort((x,y)=>x-y)).sort((x,y)=>x[0]-y[0]);for(const[g0,g1]of gs){if(g0>cur)line([a[0]+u[0]*cur,a[1]+u[1]*cur],[a[0]+u[0]*g0,a[1]+u[1]*g0],ly,c);cur=Math.max(cur,g1)}if(cur<len)line([a[0]+u[0]*cur,a[1]+u[1]*cur],b,ly,c)};
+   for(const q of partSegs()){const Q=segQuad(q),ds=D2.filter(x=>x.g.seg&&x.g.seg.key===q.key),off=p=>[p[0]+q.N[0]*q.T,p[1]+q.N[1]*q.T];
+     sl(Q[0],Q[1],ds.map(x=>[x.g.p1,x.g.p2]),'PARTITION',4);sl(Q[3],Q[2],ds.map(x=>[off(x.g.p1),off(x.g.p2)]),'PARTITION',4);line(Q[1],Q[2],'PARTITION',4);line(Q[3],Q[0],'PARTITION',4);ds.forEach(x=>{line(x.g.p1,off(x.g.p1),'PARTITION',4);line(x.g.p2,off(x.g.p2),'PARTITION',4)});
+     if(q.len>=300)dim(dimG(q.a[0],q.a[1],q.b[0],q.b[1],-q.N[0],-q.N[1],ts*0.9,ts*0.15,ts),fmt(q.len),ts*0.45,'DIM',5)}
+   (S.rooms||[]).forEach(m=>{const q=roomShape(m);if(q.length<3)return;const b=bbox(q),cx=b.minX+b.w/2,cy=b.minY+b.h/2,ar=roomArea(m);text(cx,cy-ts*0.4,ts*0.7,m.name||'공간','ROOM',5);text(cx,cy+ts*0.5,ts*0.4,`${fmt(m.w)} x ${fmt(m.h)} mm (${ar.toFixed(1)}m2 / ${pyeong(ar).toFixed(1)}평) ${(PMAT[m.mat]||PMAT.ure)} ${fmt(m.t)}T`,'ROOM',5)})}
   const N=normals(S.poly);S.poly.forEach((a,i)=>{const b=S.poly[(i+1)%S.poly.length],len=Math.hypot(b[0]-a[0],b[1]-a[1]);if(len>=1)dim(dimG(a[0],a[1],b[0],b[1],N[i][0],N[i][1],S.wallT+ts*2.2,S.wallT+ts*0.3,ts),fmt(len),ts*0.6)});
   dim(dimG(bb.minX,bb.minY,bb.maxX,bb.minY,0,-1,ts*4.6,ts*3.4,ts),fmt(bb.w),ts*0.65);dim(dimG(bb.minX,bb.maxY,bb.minX,bb.minY,-1,0,ts*4.6,ts*3.4,ts),fmt(bb.h),ts*0.65);
   if(L.inst)instDims(L).forEach(d=>dim(d.g,d.t,ts*(d.cls==='run'?0.5:d.cls==='gap'?0.42:0.56),'INSTALL',d.cls==='gap'?3:5));
@@ -2283,7 +2490,7 @@ function openModal(){$('#modal').hidden=false;setTab('pdf')}
 function setTab(t){mTab=t;$$('#mTabs button').forEach(b=>b.classList.toggle('on',b.dataset.mt===t));const ta=$('#mText'),isP=t==='pdf';$('#mLoad').hidden=t!=='json';$('#mDown').hidden=false;
   ta.hidden=isP;$('#mCopy').hidden=isP;$('#pdfOpts').hidden=!isP;$('#pdfMsg').textContent='';$('#mDown').textContent=isP?'PDF 저장':'파일로 받기';$('#mDown').classList.toggle('primary',isP);$('#mCopy').classList.toggle('primary',!isP);
   if(isP){$('#mNote').textContent='도면 양식(표제란·범례·자재 집계)이 들어간 인쇄용 PDF입니다. 배치 도면, 요약표(열별 길이·폭·벽과 떨어진 거리, 출입구 위치), 랙 상세도(규격별 평면·정면 치수), 정면도 페이지를 함께 넣을 수 있습니다. 직접 넣은 텍스트는 고른 글꼴 그대로 찍힙니다. 캐드 편집이 필요하면 CAD (DXF) 탭을 쓰세요.';return}
-  if(t==='dxf'){ta.value=exportDXF();$('#mNote').textContent='AutoCAD·캐드에서 바로 여는 DXF(R12)입니다. 레이어: WALL, RACK, HBEAM, DOOR(출입구), DIM, AISLE, AXIS, INSTALL(설치 치수), TITLE. 1 단위 = 1 mm. 이 화면에서 파일 받기가 막혀 있으면 복사해서 메모장에 붙여넣고 확장자를 .dxf 로 저장하세요.'}
+  if(t==='dxf'){ta.value=exportDXF();$('#mNote').textContent='AutoCAD·캐드에서 바로 여는 DXF(R12)입니다. 레이어: WALL, RACK, HBEAM, DOOR(출입구), PARTITION(가벽), ROOM(공간 이름), DIM, AISLE, AXIS, INSTALL(설치 치수), TITLE. 1 단위 = 1 mm. 이 화면에서 파일 받기가 막혀 있으면 복사해서 메모장에 붙여넣고 확장자를 .dxf 로 저장하세요.'}
   else if(t==='svg'){ta.value=exportSVG();$('#mNote').textContent='도면 양식을 포함한 벡터 도면입니다. A3 축척 크기로 저장돼 일러스트레이터·브라우저에서 열고 인쇄할 수 있습니다. 확장자는 .svg 입니다.'}
   else{ta.value=JSON.stringify(S);$('#mNote').textContent='현재 프로젝트 전체입니다. 발주처별로 복사해 보관하고, 다른 프로젝트 내용을 여기에 붙여넣은 뒤 불러오기를 누르면 그대로 열립니다.'}}
 $$('#mTabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.mt));
@@ -2295,7 +2502,7 @@ $('#mDown').onclick=async()=>{const ext=mTab,base=(S.meta.no||'rack-layout').rep
   if(ext==='pdf'){await savePDF(base+'.pdf');return}
   if(DL){const fn=ext==='dxf'?base+'.dxf.txt':name;try{await DL.save({filename:fn,data:$('#mText').value});toast(ext==='dxf'?'저장했습니다. 파일 이름 끝의 .txt 를 지우면 캐드에서 열립니다.':'저장했습니다.')}catch(e){if(e&&e.code==='declined')return;toast('파일 받기를 쓸 수 없습니다. 복사를 쓰세요.')}return}
   try{const b=new Blob([$('#mText').value],{type:'text/plain'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);toast(`${name} 받기를 시도했습니다. 안 받아지면 복사를 쓰세요.`)}catch(e){toast('파일 받기가 막혀 있습니다. 복사를 쓰세요.')}};
-$('#mLoad').onclick=()=>{try{const o=JSON.parse($('#mText').value);if(!Array.isArray(o.poly)||o.poly.length<3)throw 0;S=merge(o);Sel.r.clear();Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.v=null;commit();afterLoad();fitView();$('#modal').hidden=true;toast('프로젝트를 불러왔습니다.')}catch(e){toast('형식이 올바른 프로젝트 내용이 아닙니다.')}};
+$('#mLoad').onclick=()=>{try{const o=JSON.parse($('#mText').value);if(!Array.isArray(o.poly)||o.poly.length<3)throw 0;S=merge(o);Sel.r.clear();Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.m=null;Sel.w=null;Sel.v=null;commit();afterLoad();fitView();$('#modal').hidden=true;toast('프로젝트를 불러왔습니다.')}catch(e){toast('형식이 올바른 프로젝트 내용이 아닙니다.')}};
 
 
 /* ---------------- PDF ---------------- */
@@ -2333,7 +2540,9 @@ function summaryBlocks(){
   if(RN.length){const gc=(g,a)=>isFinite(g.d)?{v:`${a} ${KIND[g.kind]} ${fmt(g.d)}`,bad:g.d<limitOf(g.kind)-0.5}:{v:`${a} —`};
     B.push({t:'h',text:'열별 길이 · 폭 · 떨어진 거리 (mm)'},{t:'table',cols:[['열',18,'l'],['방향',13,'l'],['칸',10,'r'],['길이',22,'r'],['깊이',18,'r'],['한쪽 끝',36,'l'],['다른 끝',36,'l'],['앞',36,'l'],['뒤',36,'l']],
       rows:RN.map(r=>{const a=r.rot?['↑','↓','←','→']:['←','→','↑','↓'];return[r.name,r.rot?'세로':'가로',String(r.racks.length),fmt(r.len),fmt(r.dep),gc(r.s0,a[0]),gc(r.s1,a[1]),gc(r.f0,a[2]),gc(r.f1,a[3])]})})}
-  if((S.doors||[]).length)B.push({t:'h',text:'출입구'},{t:'table',cols:[['번호',22,'l'],['종류',24,'l'],['가로×높이',32,'r'],['벽',26,'l'],['모서리에서',30,'r'],['모서리까지',30,'r']],rows:S.doors.map((d,k)=>{const g=doorGeo(d);return[`출입구${k+1}`,(KN[d.kind]||'여닫이문'),`${fmt(d.w)}×${fmt(d.h)}`,`P${g.i+1}→P${(g.i+1)%n+1}`,`P${g.i+1}에서 ${fmt(g.s0)}`,`P${(g.i+1)%n+1}까지 ${fmt(g.s1)}`]})});
+  if((S.rooms||[]).length)B.push({t:'h',text:'공간 (워크인 등)'},{t:'table',cols:[['이름',30,'l'],['종류',24,'l'],['외곽 가로×세로',34,'r'],['내부 유효',34,'r'],['면적',36,'r'],['벽체',46,'l'],['문',10,'r']],rows:S.rooms.map(m=>{const ar=roomArea(m),inn=roomInner(m);return[m.name||'공간',(ROOMK[m.kind]||ROOMK.etc).n,`${fmt(m.w)}×${fmt(m.h)}`,`${fmt(inn.w)}×${fmt(inn.h)}`,`${ar.toFixed(1)}㎡ / ${pyeong(ar).toFixed(1)}평`,`${(PMAT[m.mat]||PMAT.ure)} ${fmt(m.t)}T`,String(roomDoors(m).length)]})});
+  {const pt=partTotals();if(pt.len)B.push({t:'h',text:'가벽'},{t:'kv',rows:[['가벽 총 길이',`${fmt(pt.len)} mm`],['가벽 면적',`${(pt.ar/1e6).toFixed(1)} ㎡ (길이 × 벽 높이)`],...[...pt.by.entries()].map(([k,v])=>[k,`${fmt(v)} mm`])]})}
+  if((S.doors||[]).length)B.push({t:'h',text:'출입구'},{t:'table',cols:[['번호',22,'l'],['종류',24,'l'],['가로×높이',32,'r'],['벽',26,'l'],['모서리에서',30,'r'],['모서리까지',30,'r']],rows:S.doors.map((d,k)=>{const g=doorGeo(d);return[`출입구${k+1}`,(KN[d.kind]||'여닫이문'),`${fmt(d.w)}×${fmt(d.h)}`,g.wall,`${g.nA}에서 ${fmt(g.s0)}`,`${g.nB}까지 ${fmt(g.s1)}`]})});
   const sz=[...st.groups.entries()].sort((a,b)=>b[1]-a[1]);
   if(sz.length)B.push({t:'h',text:'랙 규격별 수량'},{t:'table',cols:[['규격 (가로×깊이×높이)',60,'l'],['단',16,'r'],['수량',24,'r']],rows:sz.map(([k,c])=>{const[d,l]=k.split('|');return[d,`${l}단`,`${fmt(c)}칸`]})});
   if(S.beams.length){const m=new Map();S.beams.forEach(b=>{const k=bName(b.w,b.h)+`  (가로 ${fmt(b.w)} × 세로 ${fmt(b.h)})`;m.set(k,(m.get(k)||0)+1)});B.push({t:'h',text:'H빔 기둥'},{t:'table',cols:[['규격',80,'l'],['수량',24,'r']],rows:[...m.entries()].map(([k,c])=>[k,`${fmt(c)}개`])})}
@@ -2419,7 +2628,7 @@ function svWrite(id,name){const j=JSON.stringify(S),a=svIdx(),i=a.findIndex(x=>x
   if(i>=0)a[i]=m;else a.unshift(m);a.sort((p,q)=>(q.id==='backup'?-1:0)-(p.id==='backup'?-1:0)||q.t-p.t);
   try{svPut(a)}catch(e){toast('저장 목록을 쓰지 못했습니다.');return false}return true}
 function svBackup(){svWrite('backup','불러오기 전 자동 백업')}
-function svApply(o,label){if(!o||!Array.isArray(o.poly)||o.poly.length<3)throw 0;S=merge(o);Sel.r.clear();Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.v=null;Sel.e=null;
+function svApply(o,label){if(!o||!Array.isArray(o.poly)||o.poly.length<3)throw 0;S=merge(o);Sel.r.clear();Sel.b=null;Sel.d=null;Sel.k=null;Sel.t=null;Sel.m=null;Sel.w=null;Sel.v=null;Sel.e=null;
   commit();afterLoad();fitView('room');toast(`'${label}'을(를) 불러왔습니다. 직전 작업은 '불러오기 전 자동 백업'에 남겨 두었습니다.`)}
 function svRender(){const a=svIdx(),L=$('#svList');L.innerHTML='';
   if(!a.length){L.innerHTML='<div class="svempty">아직 저장한 작업이 없습니다. 이름을 정하고 <b>새로 저장</b>을 누르세요.</div>';return}
